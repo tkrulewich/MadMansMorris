@@ -27,16 +27,21 @@ class BoardSpace:
 
         self.space_name = space_name
         self.neighbors = {}
+    
+    def add_neighbor(self, space):
+        self.neighbors[space.space_name] = space
+    
+    def add_neighbors(self, spaces):
+        for space in spaces:
+            self.add_neighbor(space)
 
 
 
 class Game():
     class Board:
-
-
         def __init__(self):
-            self.ROW_ARRAY = ["A", "B", "C", "D", "E", "F", "G"]
-            self.COLUMN_ARRAY = [1, 2, 3, 4, 5, 6, 7]
+            self.COLUMN_ARRAY = ["A", "B", "C", "D", "E", "F", "G"]
+            self.ROW_ARRAY = [1, 2, 3, 4, 5, 6, 7]
 
             invalid_spaces = ["A2", "A3", "A5", "A6", "G2", "G3", "G5", "G6",
             "B1", "B3", "B5", "B7", "F1", "F3", "F5", "F7", "C1", "C2"
@@ -46,19 +51,53 @@ class Game():
 
             for row in self.ROW_ARRAY:
                 for col in self.COLUMN_ARRAY:
-                    space_name = row + str(col)
+                    space_name = col + str(row)
 
                     if space_name not in invalid_spaces:
                         self.spaces[space_name] = BoardSpace(space_name)
             
+            self.spaces["A1"].add_neighbors([self.spaces["A4"], self.spaces["D1"]])
+            self.spaces["A4"].add_neighbors([self.spaces["A1"], self.spaces["A7"], self.spaces["B4"]])
+            self.spaces["A7"].add_neighbors([self.spaces["A4"], self.spaces["D7"]])
+
+            self.spaces["B2"].add_neighbors([self.spaces["B4"], self.spaces["D2"]])
+            self.spaces["B4"].add_neighbors([self.spaces["A4"], self.spaces["B2"], self.spaces["B2"], self.spaces["C4"]])
+            self.spaces["B6"].add_neighbors([self.spaces["B4"], self.spaces["D6"]])
+
+
+            self.spaces["C3"].add_neighbors([self.spaces["C4"], self.spaces["D3"]])
+            self.spaces["C4"].add_neighbors([self.spaces["B4"], self.spaces["C3"], self.spaces["C5"]])
+            self.spaces["C5"].add_neighbors([self.spaces["C4"], self.spaces["D5"]])
+            
+            self.spaces["D5"].add_neighbors([self.spaces["C5"], self.spaces["E5"], self.spaces["D6"]])
+            self.spaces["D6"].add_neighbors([self.spaces["B6"], self.spaces["D5"], self.spaces["F6"], self.spaces["D7"]])
+            self.spaces["D7"].add_neighbors([self.spaces["A7"], self.spaces["D6"], self.spaces["G7"]])
+
+            self.spaces["E5"].add_neighbors([self.spaces["E4"], self.spaces["D5"]])
+            self.spaces["E4"].add_neighbors([self.spaces["E3"], self.spaces["E5"], self.spaces["F4"]])
+            self.spaces["E3"].add_neighbors([self.spaces["E4"], self.spaces["D3"]])
+
+            self.spaces["D3"].add_neighbors([self.spaces["C3"], self.spaces["D2"], self.spaces["E3"]])
+            self.spaces["D2"].add_neighbors([self.spaces["D3"], self.spaces["B2"], self.spaces["D1"], self.spaces["F2"]])
+            self.spaces["D1"].add_neighbors([self.spaces["A1"], self.spaces["D2"], self.spaces["G1"]])
+
+            self.spaces["F2"].add_neighbors([self.spaces["F4"], self.spaces["D2"]])
+            self.spaces["F4"].add_neighbors([self.spaces["F2"], self.spaces["E4"], self.spaces["F6"], self.spaces["G4"]])
+            self.spaces["F6"].add_neighbors([self.spaces["F4"], self.spaces["D6"]])
+
+            self.spaces["G4"].add_neighbors([self.spaces["G4"], self.spaces["G7"], self.spaces["F4"]])
+            self.spaces["G1"].add_neighbors([self.spaces["G4"], self.spaces["D1"]])
+            self.spaces["G7"].add_neighbors([self.spaces["G4"], self.spaces["D7"]])
+            
             
             for space in invalid_spaces:
-                self.set_piece(BoardSpace.INVALID_SPACE, space)
+                self.set_space_value(space, BoardSpace.INVALID_SPACE)
         
-        def set_piece(self, piece_type, space):
+        def set_space_value(self, space, value):
             if self.get_space(space) == BoardSpace.EMPTY_SPACE:
-                self.spaces[space].state = piece_type
-                
+                self.spaces[space].state = value
+
+
         def get_space(self, space_name):
             if space_name in self.spaces:
                 return self.spaces[space_name].state
@@ -82,25 +121,36 @@ class Game():
         else:
             self.current_player = self.black_player
 
-    def make_move(self, space):
+    def place_piece(self, space):
         if self.board.get_space(space) != BoardSpace.EMPTY_SPACE:
             return
-            
-        self.board.set_piece(self.current_player.piece_type, space)
-        self.change_player()
+        
+        if self.current_player.unplayed_pieces > 0:
+            self.board.set_space_value(space, self.current_player.piece_type)
+            self.current_player.unplayed_pieces -= 1
+        
+            self.change_player()
+        
     
     def move_piece(self, start_space_name, end_space_name):
+        if self.current_player.unplayed_pieces > 0:
+            return
+
         start_space = self.board.get_space(start_space_name)
         end_space = self.board.get_space(end_space_name)
 
         if start_space != self.current_player.piece_type:
             return
         
+        
         if end_space != BoardSpace.EMPTY_SPACE:
             return
+
+        if end_space_name not in self.board.spaces[start_space_name].neighbors:
+            return
         
-        self.board.set_piece(start_space_name, BoardSpace.EMPTY_SPACE)
-        self.board.set_piece(end_space_name, self.current_player.piece_type)
+        self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
+        self.board.spaces[end_space_name].state = self.current_player.piece_type
 
         self.change_player()
 
