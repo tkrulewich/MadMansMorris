@@ -19,16 +19,16 @@ class Player():
         #     # Player.set_piece(input())
 
 class BoardSpace:
-    INVALID_SPACE = -1
-    EMPTY_SPACE = 0
-    WHITE_SPACE = 1
-    BLACK_SPACE = 2
+    INVALID_SPACE: int = -1
+    EMPTY_SPACE: int = 0
+    WHITE_SPACE: int = 1
+    BLACK_SPACE: int = 2
 
-    def __init__(self, space_name) -> None:
+    def __init__(self, space_name: str) -> None:
         self.state = BoardSpace.EMPTY_SPACE
 
-        self.space_name = space_name
-        self.neighbors = {}
+        self.space_name :str = space_name
+        self.neighbors : dict = {}
     
     def add_neighbor(self, space):
         self.neighbors[space.space_name] = space
@@ -46,8 +46,8 @@ class Game():
             self.ROW_ARRAY = [1, 2, 3, 4, 5, 6, 7]
 
             invalid_spaces = ["A2", "A3", "A5", "A6", "G2", "G3", "G5", "G6",
-            "B1", "B3", "B5", "B7", "F1", "F3", "F5", "F7", "C1", "C2"
-            "C6","C7", "E1", "E2", "E6", "E7", "D4"]
+            "B1", "B3", "B5", "B7", "F1", "F3", "F5", "F7", "C1", "C2",
+            "C6","C7", "E1", "E2", "E6", "E7", "D4", "C6"]
 
             self.spaces = {}
 
@@ -87,7 +87,7 @@ class Game():
             self.spaces["F4"].add_neighbors([self.spaces["F2"], self.spaces["E4"], self.spaces["F6"], self.spaces["G4"]])
             self.spaces["F6"].add_neighbors([self.spaces["F4"], self.spaces["D6"]])
 
-            self.spaces["G4"].add_neighbors([self.spaces["G4"], self.spaces["G7"], self.spaces["F4"]])
+            self.spaces["G4"].add_neighbors([self.spaces["G1"], self.spaces["G7"], self.spaces["F4"]])
             self.spaces["G1"].add_neighbors([self.spaces["G4"], self.spaces["D1"]])
             self.spaces["G7"].add_neighbors([self.spaces["G4"], self.spaces["D7"]])
             
@@ -123,17 +123,72 @@ class Game():
         else:
             self.current_player = self.black_player
 
-    def place_piece(self, space):
-        if self.board.get_space(space) != BoardSpace.EMPTY_SPACE:
+    def place_piece(self, space_name):
+        if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
             return
         
         if self.current_player.pieces_in_deck > 0:
-            self.board.set_space_value(space, self.current_player.piece_type)
+            self.board.set_space_value(space_name, self.current_player.piece_type)
             self.current_player.pieces_in_deck -= 1
 
-            self.current_player.pieces_on_board +=
+            self.current_player.pieces_on_board += 1
+
+            self.check_for_mill(space_name)
         
             self.change_player()
+    
+    def check_for_mill(self, space_name):
+        space = self.board.spaces[space_name]
+
+        visited_horizontal = set([space])
+        visited_vertical = set([space])
+
+        for neighbor in space.neighbors.values():
+            if neighbor.state == space.state:
+                # First letter of name changes on vertical movement, second number part on horizontal
+                print("Neighbor: " + neighbor.space_name)
+                print("Space: " + space_name)
+
+                if neighbor.space_name[0] != space_name[0]:
+                    direction = "horizontal"
+                    visited_horizontal.add(neighbor)
+                else:
+                    direction = "vertical"
+                    visited_vertical.add(neighbor)
+                
+                for neighbors_neighbor in neighbor.neighbors.values():
+                    if neighbors_neighbor.state != space.state:
+                        continue
+
+                    # if we've already visited this neighbor skip it
+                    if neighbors_neighbor in visited_vertical or neighbors_neighbor in visited_horizontal:
+                        continue
+
+                    if direction == "vertical":
+                        # if the direction of movment changed skip this neighbor
+                        if neighbors_neighbor.space_name[0] != space_name[0]:
+                            continue
+
+                        visited_vertical.add(neighbors_neighbor)
+                    else:
+                        # if the direction of movment changed skip this neighbor
+                        if neighbors_neighbor.space_name[1] != space_name[1]:
+                            continue
+
+                        visited_horizontal.add(neighbors_neighbor)
+        
+        if len(visited_vertical) == 3:
+            print("VERTICAL MILL FORMED")
+        
+        if len(visited_horizontal) == 3:
+            print("HORIZONTAL MILL FORMED")
+
+
+
+
+                
+
+
         
     
     def move_piece(self, start_space_name, end_space_name):
@@ -156,6 +211,8 @@ class Game():
         
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
+
+        self.check_for_mill(end_space_name)
 
         self.change_player()
 
