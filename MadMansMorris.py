@@ -6,7 +6,9 @@ import random
 
 class Player():
     def __init__(self, piece_type):
-        self.unplayed_pieces = 9
+        self.pieces_in_deck = 9
+        self.pieces_on_board = 0
+
         self.piece_type = piece_type
 
         
@@ -125,15 +127,17 @@ class Game():
         if self.board.get_space(space) != BoardSpace.EMPTY_SPACE:
             return
         
-        if self.current_player.unplayed_pieces > 0:
+        if self.current_player.pieces_in_deck > 0:
             self.board.set_space_value(space, self.current_player.piece_type)
-            self.current_player.unplayed_pieces -= 1
+            self.current_player.pieces_in_deck -= 1
+
+            self.current_player.pieces_on_board +=
         
             self.change_player()
         
     
     def move_piece(self, start_space_name, end_space_name):
-        if self.current_player.unplayed_pieces > 0:
+        if self.current_player.pieces_in_deck > 0:
             return
 
         start_space = self.board.get_space(start_space_name)
@@ -146,8 +150,9 @@ class Game():
         if end_space != BoardSpace.EMPTY_SPACE:
             return
 
-        if end_space_name not in self.board.spaces[start_space_name].neighbors:
+        if end_space_name not in self.board.spaces[start_space_name].neighbors and self.current_player.pieces_on_board > 3:    
             return
+        
         
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
