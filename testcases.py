@@ -6,23 +6,28 @@ class NewGameTests(unittest.TestCase):
     def setUp(self):
         self.game = Game()
 
+    # AC 1.1 (Generate New Board)
     def test_board_creation(self):
         for space in game.board.spaces:
             self.assertEqual(game.board.spaces[space].state, BoardSpace.EMPTY_SPACE)
     
     def test_board_creation_deck_size(self):
-        self.assertEqual(self.game.white_player.unplayed_pieces, 9)
-        self.assertEqual(self.game.black_player.unplayed_pieces, 9)
+        self.assertEqual(self.game.white_player.pieces_in_deck, 9)
+        self.assertEqual(self.game.black_player.pieces_in_deck, 9)
     
-    def test_invalid_row_access(self):
+    def test_invalid_row_access_out_of_bounds(self):
         space_state = self.game.board.get_space("H2")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
 
         space_state = self.game.board.get_space("A5")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
-    def test_invalid_col_access(self):
+    def test_invalid_col_access_out_of_bounds(self):
         space_state = self.game.board.get_space("A9")
+        self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
+    
+    def test_invalid_space_within_bounds(self):
+        space_state = self.game.board.get_space("A2")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
     def test_valid_white_move(self):
@@ -79,19 +84,19 @@ class NewGameTests(unittest.TestCase):
     
     def test_fewer_pieces_remaining_after_valid_move(self):
         first_player = self.game.current_player
-        first_player_pieces_at_start = first_player.unplayed_pieces
+        first_player_pieces_at_start = first_player.pieces_in_deck
 
         self.game.place_piece("A1")
 
         second_player = self.game.current_player
-        second_player_pieces_at_start = second_player.unplayed_pieces
+        second_player_pieces_at_start = second_player.pieces_in_deck
 
         self.assertNotEqual(first_player, second_player)
 
         self.game.place_piece("A4")
 
-        self.assertEqual(first_player.unplayed_pieces, first_player_pieces_at_start - 1)
-        self.assertEqual(second_player.unplayed_pieces, second_player_pieces_at_start - 1)
+        self.assertEqual(first_player.pieces_in_deck, first_player_pieces_at_start - 1)
+        self.assertEqual(second_player.pieces_in_deck, second_player_pieces_at_start - 1)
 
 
 
