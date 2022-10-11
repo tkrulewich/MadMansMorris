@@ -96,7 +96,7 @@ class Game():
                 self.set_space_value(space, BoardSpace.INVALID_SPACE)
         
         def set_space_value(self, space, value):
-            if self.get_space(space) == BoardSpace.EMPTY_SPACE:
+            if space in self.spaces:
                 self.spaces[space].state = value
 
 
@@ -112,8 +112,6 @@ class Game():
 
         self.white_player = Player(BoardSpace.WHITE_SPACE)
         self.black_player = Player(BoardSpace.BLACK_SPACE)
-
-        self.board = Game.Board()
 
         self.coin_toss()
     
@@ -137,6 +135,20 @@ class Game():
         
             self.change_player()
     
+    def remove_piece(self, space_name):
+        state = self.board.get_space(space_name)
+        if (self.board.get_space(space_name) == self.current_player.piece_type or 
+            self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE):
+            return
+        
+        if (self.check_for_mill(space_name)):
+            return
+        
+        self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
+
+        self.change_player()
+        self.current_player.pieces_on_board -= 1
+    
     def check_for_mill(self, space_name):
         space = self.board.spaces[space_name]
 
@@ -146,8 +158,6 @@ class Game():
         for neighbor in space.neighbors.values():
             if neighbor.state == space.state:
                 # First letter of name changes on vertical movement, second number part on horizontal
-                print("Neighbor: " + neighbor.space_name)
-                print("Space: " + space_name)
 
                 if neighbor.space_name[0] != space_name[0]:
                     direction = "horizontal"
@@ -178,10 +188,12 @@ class Game():
                         visited_horizontal.add(neighbors_neighbor)
         
         if len(visited_vertical) == 3:
-            print("VERTICAL MILL FORMED")
+            return True
         
         if len(visited_horizontal) == 3:
-            print("HORIZONTAL MILL FORMED")
+            return True
+        
+        return False
 
 
 
@@ -224,7 +236,3 @@ class Game():
 
         elif self.current_player == self.black_player:
             self.current_player = self.white_player
-
-
-
-game = Game()

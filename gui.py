@@ -1,6 +1,6 @@
 from hashlib import blake2b
 from string import whitespace
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy
+from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
@@ -18,20 +18,25 @@ class QBoardSpace(QGraphicsSvgItem):
         super().__init__()
         self.board_space : MadMansMorris = board_space
 
+        self.update()
+
+    def update(self):
+        self.setFlag(QGraphicsSvgItem.GraphicsItemFlag.ItemIsMovable, True)
+
         if self.board_space.state == MadMansMorris.BoardSpace.BLACK_SPACE:
             self.setSharedRenderer(black_piece_render)
         elif self.board_space.state == MadMansMorris.BoardSpace.WHITE_SPACE:
             self.setSharedRenderer(white_piece_render)
-
+        else :
+            self.setSharedRenderer(empty_space_render)
+            self.setFlag(QGraphicsSvgItem.GraphicsItemFlag.ItemIsMovable, False)
+        
         self.x, self.y = self.__position_from_space_name(self.board_space.space_name)
 
         self.setPos(self.x * 100.0 -354.0 / 2.0, self.y * 100.0 - 354.0 / 2.0)
 
         self.setTransformOriginPoint(self.boundingRect().center())
         self.setScale(0.15)
-
-        self.setFlag(QGraphicsSvgItem.GraphicsItemFlag.ItemIsMovable, True)
-        
     
     def __position_from_space_name(self, space_name: str):
         x = ord(space_name[0]) - 65
@@ -43,59 +48,43 @@ class MainWindow(QMainWindow):
     def __init__(self):
         self.game = MadMansMorris.Game()
 
-        self.game.place_piece("A7")
-        self.second_player = self.game.current_player
-
-        self.game.place_piece("D7")
-
-        self.game.place_piece("G7")
-        self.game.place_piece("B6")
-
-        self.game.place_piece("D6")
-        self.game.place_piece("F6")
-        
-        self.game.place_piece("B4")
-        self.game.place_piece("E4")
-
-        self.game.place_piece("F4")   
-        self.game.place_piece("G4")
-
-        self.game.place_piece("G1")
-        self.game.place_piece("D1")
-
-        self.game.place_piece("A1")
-        self.game.place_piece("A4")
-
-        self.game.place_piece("B2")
-        self.game.place_piece("D2")
-
-        self.game.place_piece("D3")
-        self.game.place_piece("F2")
-
-        self.game.move_piece("D3", "C3")
-        self.game.move_piece("E4", "E3")
-        self.game.move_piece("C3", "C4")
-        self.game.move_piece("E3", "D3")
-
-        self.game.move_piece("C3", "C4")
-        self.game.move_piece("D3", "E3")
-        self.game.move_piece("C4", "C3")
-        self.game.move_piece("E3", "D3")
-
-
         super().__init__()
         self.setWindowTitle("Mad Man's Morris")
 
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.player_turn_text = QLabel("Player Turn: " )
+        self.layout.addWidget(self.player_turn_text)
+
         self.view = QGraphicsView()
-        self.setCentralWidget(self.view)
+        self.layout.addWidget(self.view)
 
         self.scene = QGraphicsScene()
         self.view.setScene(self.scene)
 
+        self.space_graphics = []
+
         self.draw_board()
 
+        self.centralWidget = QWidget()
+        self.centralWidget.setLayout(self.layout)
+        self.setCentralWidget(self.centralWidget)
+
         for space in self.game.board.spaces.values():
-            self.scene.addItem(QBoardSpace(space))
+            space_graphic = QBoardSpace(space)
+            
+            self.space_graphics.append(space_graphic)
+            self.scene.addItem(space_graphic)
+        
+
+        self.game.place_piece("A7")
+        self.game.place_piece("A1")
+        self.game.place_piece("A4")
+        
+        self.game.remove_piece("A7")
+
+        self.update_board()
         
 
         self.setMinimumHeight(700)
@@ -123,6 +112,11 @@ class MainWindow(QMainWindow):
                 space_name = chr(x + 65) + str(y + 1)
                 if space_name in self.game.board.spaces:
                     self.scene.addEllipse(x * 100 - 6, y * 100 - 6, 12, 12, QPen(QColor(0, 0, 0)), QBrush(QColor(0, 0, 0)))
+    
+    def update_board(self):
+        self.player_turn_text.setText("Player Turn: " + ("Black" if self.game.current_player == self.game.black_player else "White"))
+        for space_graphic in self.space_graphics:
+            space_graphic.update()
 
 
 
