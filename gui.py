@@ -1,10 +1,11 @@
 from hashlib import blake2b
 from string import whitespace
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel
-from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont
+from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtCore import QRect
+from PyQt6.QtCore import Qt
 
 import MadMansMorris
 
@@ -55,13 +56,20 @@ class MainWindow(QMainWindow):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.player_turn_text = QLabel("Player Turn: " )
+        self.player_turn_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.layout.addWidget(self.player_turn_text)
 
         self.view = QGraphicsView()
         self.layout.addWidget(self.view)
 
+        self.view.setFrameStyle(0)
+
+        self.setStyleSheet("background-color: #FFFFFF; color: #000000; font-family: Arial; font-size: 20px;align-items: center; justify-content: center;")
+
         self.scene = QGraphicsScene()
         self.view.setScene(self.scene)
+        self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         self.space_graphics = []
 
@@ -114,10 +122,6 @@ class MainWindow(QMainWindow):
         self.game.move_piece("G4", "F4")
 
         self.update_board()
-        
-
-        self.setMinimumHeight(750)
-        self.setMinimumWidth(750)
 
         self.sizePolicy().setHorizontalPolicy(QSizePolicy.Policy.Minimum)
         self.sizePolicy().setVerticalPolicy(QSizePolicy.Policy.Minimum)
@@ -147,6 +151,12 @@ class MainWindow(QMainWindow):
                 space_name = chr(x + 65) + str(y + 1)
                 if space_name in self.game.board.spaces:
                     self.scene.addEllipse(x * 100 - 6, y * 100 - 6, 12, 12, QPen(QColor(0, 0, 0)), QBrush(QColor(0, 0, 0)))
+    
+    def resizeEvent(self, a0: QResizeEvent) -> None:
+        self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+        self.scene.update()
+        return super().resizeEvent(a0)
+
     
     def update_board(self):
         self.player_turn_text.setText("Player Turn: " + ("Black" if self.game.current_player == self.game.black_player else "White"))
