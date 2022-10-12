@@ -118,23 +118,25 @@ class Game():
     def coin_toss(self):
         if random.randint(0, 1) == 0:
             self.current_player = self.white_player
+            self.other_player = self.black_player
         else:
             self.current_player = self.black_player
+            self.other_player = self.white_player
 
     def place_piece(self, space_name):
+        #make_mill = False
         if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
             return
         
         if self.current_player.pieces_in_deck > 0:
-            self.board.set_space_value(space_name, self.current_player.piece_type)
             self.current_player.pieces_in_deck -= 1
-
             self.current_player.pieces_on_board += 1
-
-            if self.check_for_mill(space_name):
-                print("Mill!")
         
-            self.change_player()
+        self.board.set_space_value(space_name, self.current_player.piece_type)
+
+
+        #self.change_player()
+        #return make_mill
     
     def remove_piece(self, space_name):
         state = self.board.get_space(space_name)
@@ -235,6 +237,8 @@ class Game():
     def change_player(self):
         if self.current_player == self.white_player:
             self.current_player = self.black_player
+            self.other_player = self.white_player
 
         elif self.current_player == self.black_player:
             self.current_player = self.white_player
+            self.other_player = self.black_player

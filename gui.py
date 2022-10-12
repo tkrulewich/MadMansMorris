@@ -1,6 +1,7 @@
 from hashlib import blake2b
+from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel,QGraphicsSceneMouseEvent
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
@@ -9,9 +10,9 @@ from PyQt6.QtCore import QRect, Qt
 import MadMansMorris
 
 
-black_piece_render = QSvgRenderer("images/black_piece.svg")
-white_piece_render = QSvgRenderer("images/white_piece.svg")
-empty_space_render = QSvgRenderer("images/empty_space.svg")
+black_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/black_piece.svg")
+white_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/white_piece.svg")
+empty_space_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/empty_space.svg")
 
 class QBoardSpace(QGraphicsSvgItem):
     def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game):
@@ -38,10 +39,45 @@ class QBoardSpace(QGraphicsSvgItem):
         self.setScale(0.15)
     
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.board_space.state == MadMansMorris.BoardSpace.EMPTY_SPACE:
-            self.game.place_piece(self.board_space.space_name)
-        elif self.board_space.state != self.game.current_player.piece_type:
-            self.game.remove_piece(self.board_space.space_name)
+        white_deck = self.game.white_player.pieces_in_deck
+        black_deck = self.game.black_player.pieces_in_deck
+        player_board = self.game.current_player.pieces_on_board
+        space_state = self.board_space.state
+        space_name = self.board_space.space_name
+        #Start of game before all pieces are on the board 
+        if white_deck > 0 or black_deck > 0:# or (white_deck == 0 and black_deck == 0 and player_board == 3):
+            if space_state == MadMansMorris.BoardSpace.EMPTY_SPACE:
+                self.game.place_piece(self.board_space.space_name)
+            else:
+                return
+        #here is where the game stops letting me make moves
+        elif white_deck == 0 and black_deck == 0:
+            if space_state == MadMansMorris.BoardSpace.EMPTY_SPACE and space_name in self.board_space.neighbors:
+                self.game.place_piece(self.board_space.space_name)
+            else:
+                return
+        morris_check = self.game.check_for_mill(space_name)
+
+        if not morris_check:
+            self.game.change_player()
+        
+        if morris_check:
+            print("Morris!")
+
+            
+        
+       # if not morris_check and space_state == self.game.other_player.piece_type:
+         #   self.game.remove_piece(self.board_space.space_name)
+          #  self.game.change_player()
+        
+            
+          #  self.game.change_player()
+
+
+            #else:
+                #return
+                #if self.board_space.state != self.game.current_player.piece_type:
+                    #self.game.remove_piece(self.board_space.space_name)
             
         return super().mousePressEvent(event)
     
