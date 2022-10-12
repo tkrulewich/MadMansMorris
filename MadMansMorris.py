@@ -131,7 +131,8 @@ class Game():
 
             self.current_player.pieces_on_board += 1
 
-            self.check_for_mill(space_name)
+            if self.check_for_mill(space_name):
+                print("Mill!")
         
             self.change_player()
     
@@ -224,7 +225,8 @@ class Game():
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
 
-        self.check_for_mill(end_space_name)
+        if self.check_for_mill(end_space_name):
+            print("Mill formed") 
 
         self.change_player()
 

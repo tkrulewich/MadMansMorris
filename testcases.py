@@ -11,10 +11,12 @@ class NewGameTests(unittest.TestCase):
         for space in self.game.board.spaces:
             self.assertEqual(self.game.board.spaces[space].state, BoardSpace.EMPTY_SPACE)
     
+    # AC 1.2 (Generate New Deck)
     def test_board_creation_deck_size(self):
         self.assertEqual(self.game.white_player.pieces_in_deck, 9)
         self.assertEqual(self.game.black_player.pieces_in_deck, 9)
     
+    # AC 1.3 (Test Invalid Row Access Out of Bounds)
     def test_invalid_row_access_out_of_bounds(self):
         space_state = self.game.board.get_space("H2")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
@@ -22,14 +24,17 @@ class NewGameTests(unittest.TestCase):
         space_state = self.game.board.get_space("A5")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
+    # AC 1.4 (Test Invalid Column Access Out of Bounds)
     def test_invalid_col_access_out_of_bounds(self):
         space_state = self.game.board.get_space("A9")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
+    # AC 1.5 (Test Invalid Space Access Within Bounds)
     def test_invalid_space_within_bounds(self):
         space_state = self.game.board.get_space("A2")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
+    # AC 2.1 (Test Valid White Move)
     def test_valid_white_move(self):
         if self.game.current_player != self.game.white_player:
             self.game.place_piece("A1")
@@ -42,6 +47,20 @@ class NewGameTests(unittest.TestCase):
 
         self.assertEqual(space, BoardSpace.WHITE_SPACE)
     
+    # AC 2.2 (Test Valid Black Move)
+    def test_valid_black_move(self):
+        if self.game.current_player != self.game.black_player:
+            self.game.place_piece("A1")
+    
+        
+        self.assertEqual(self.game.current_player, self.game.black_player)
+
+        self.game.place_piece("G1")
+        space = self.game.board.get_space("G1")
+
+        self.assertEqual(space, BoardSpace.BLACK_SPACE)
+    
+
     def test_space_has_correct_neighbors(self):
         self.assertTrue( "G4" in self.game.board.spaces["G1"].neighbors)
         self.assertTrue( "D1" in self.game.board.spaces["G1"].neighbors)
@@ -49,6 +68,7 @@ class NewGameTests(unittest.TestCase):
         self.assertTrue( "C4" in self.game.board.spaces["B4"].neighbors)
         self.assertTrue( "F6" in self.game.board.spaces["D6"].neighbors)
     
+    # AC 2.3 (Test Invalid White Move - Space Occupied)
     def test_invalid_move_occupied_space(self):
         
         first_player = self.game.current_player
@@ -82,7 +102,21 @@ class NewGameTests(unittest.TestCase):
 
         # self.assertEqual(end_space, first_player.piece_type)
     
-    def test_fewer_pieces_remaining_after_valid_move(self):
+    # AC 2.4 (Illegal Move - Out of Bounds)
+    def test_invalid_move_out_of_bounds(self):
+        first_player = self.game.current_player
+        first_player_pieces_in_deck_at_start = first_player.pieces_in_deck
+        first_player_pieces_on_board_at_start = first_player.pieces_on_board
+
+
+        self.game.place_piece("A9")
+
+        self.assertEqual(first_player.pieces_in_deck, first_player_pieces_in_deck_at_start)
+        self.assertEqual(self.game.current_player.pieces_on_board, first_player_pieces_on_board_at_start)
+        self.assertEqual(self.game.current_player, first_player)
+        self.assertEqual(self.game.board.get_space("A9"), BoardSpace.INVALID_SPACE)
+
+    def test_fewer_pieces_remaining_in_deck_after_valid_move(self):
         first_player = self.game.current_player
         first_player_pieces_at_start = first_player.pieces_in_deck
 
@@ -165,19 +199,21 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
         self.game.move_piece("D6", "D5")
         self.game.move_piece("D7", "D6")
 
+        self.assertEqual(self.game.check_for_mill("B6"), True)
+        self.assertEqual(self.game.check_for_mill("D6"), True)
+        self.assertEqual(self.game.check_for_mill("F6"), True)
 
-    
+
+    # AC 3.1 (Forming a Vertical Mill)    
     def test_vertical_mill_formation(self):
         self.game.move_piece("D3", "C3")
-        self.game.move_piece("E4", "E3")
-        self.game.move_piece("C3", "C4")
-        self.game.move_piece("E3", "D3")
+        self.game.move_piece("E4", "E5")
+        self.game.move_piece("F4", "E4")
+        self.game.move_piece("G4", "F4")
 
-
-        self.game.move_piece("C3", "C4")
-        self.game.move_piece("D3", "E3")
-        self.game.move_piece("C4", "C3")
-        self.game.move_piece("E3", "D3")
+        self.assertEqual(self.game.check_for_mill("F6"), True)
+        self.assertEqual(self.game.check_for_mill("F4"), True)
+        self.assertEqual(self.game.check_for_mill("F2"), True)
         
     
 

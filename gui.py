@@ -1,7 +1,7 @@
 from hashlib import blake2b
 from string import whitespace
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel
-from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent
+from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtCore import QRect
@@ -79,16 +79,45 @@ class MainWindow(QMainWindow):
         
 
         self.game.place_piece("A7")
+        self.second_player = self.game.current_player
+
+        self.game.place_piece("D7")
+
+        self.game.place_piece("G7")
+        self.game.place_piece("B6")
+
+        self.game.place_piece("D6")
+        self.game.place_piece("F6")
+        
+        self.game.place_piece("B4")
+        self.game.place_piece("E4")
+
+        self.game.place_piece("F4")   
+        self.game.place_piece("G4")
+
+        self.game.place_piece("G1")
+        self.game.place_piece("D1")
+
         self.game.place_piece("A1")
         self.game.place_piece("A4")
-        
-        self.game.remove_piece("A7")
+
+        self.game.place_piece("B2")
+        self.game.place_piece("D2")
+
+        self.game.place_piece("D3")
+        self.game.place_piece("F2")
+
+
+        self.game.move_piece("D3", "C3")
+        self.game.move_piece("E4", "E5")
+        self.game.move_piece("F4", "E4")
+        self.game.move_piece("G4", "F4")
 
         self.update_board()
         
 
-        self.setMinimumHeight(700)
-        self.setMinimumWidth(700)
+        self.setMinimumHeight(750)
+        self.setMinimumWidth(750)
 
         self.sizePolicy().setHorizontalPolicy(QSizePolicy.Policy.Minimum)
         self.sizePolicy().setVerticalPolicy(QSizePolicy.Policy.Minimum)
@@ -107,6 +136,12 @@ class MainWindow(QMainWindow):
         self.scene.addLine(0, 300, 200, 300, QPen(QColor(0, 0, 0)))
         self.scene.addLine(400, 300, 600, 300, QPen(QColor(0, 0, 0)))
 
+        for row in range(7):
+            self.scene.addText(str(7 - row), QFont("Arial", 20)).setPos(-50, row * 100 - 30)
+        
+        for col in range(7):
+            self.scene.addText(chr(65 + col), QFont("Arial", 20)).setPos(col * 100 - 20, 630)
+
         for y in range(0, 7):
             for x in range(0, 7):
                 space_name = chr(x + 65) + str(y + 1)
@@ -117,6 +152,8 @@ class MainWindow(QMainWindow):
         self.player_turn_text.setText("Player Turn: " + ("Black" if self.game.current_player == self.game.black_player else "White"))
         for space_graphic in self.space_graphics:
             space_graphic.update()
+        
+        self.scene.setSceneRect(self.scene.itemsBoundingRect())
 
 
 
