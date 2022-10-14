@@ -1,12 +1,8 @@
 from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
-<<<<<<< HEAD
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout
 from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect
-=======
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel,QGraphicsSceneMouseEvent
->>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
@@ -14,8 +10,6 @@ from PyQt6.QtCore import QRect, Qt
 
 import MadMansMorris
 
-
-<<<<<<< HEAD
 black_piece_render = QSvgRenderer("images/black_piece.svg")
 black_piece_mill_render = QSvgRenderer("images/black_piece_mill.svg")
 
@@ -23,12 +17,6 @@ white_piece_render = QSvgRenderer("images/white_piece.svg")
 white_piece_mill_render = QSvgRenderer("images/white_piece_mill.svg")
 
 empty_space_render = QSvgRenderer("images/empty_space.svg")
-=======
-black_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/black_piece.svg")
-white_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/white_piece.svg")
-empty_space_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/empty_space.svg")
->>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
-
 
 class QBoardSpace(QGraphicsSvgItem):
     def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game):
@@ -60,59 +48,18 @@ class QBoardSpace(QGraphicsSvgItem):
         self.setTransformOriginPoint(self.boundingRect().center())
         self.setScale(0.15)
 
-        # if self.game.check_for_mill(self.board_space.space_name):
-        #     colorEffect = QGraphicsColorizeEffect()
-        #     colorEffect.setColor(QColor(100, 100, 0, 200))
-        #     self.setGraphicsEffect(colorEffect)
+        if self.game.check_for_mill(self.board_space.space_name):
+            colorEffect = QGraphicsColorizeEffect()
+            colorEffect.setColor(QColor(100, 100, 0, 200))
+            self.setGraphicsEffect(colorEffect)
+    
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-<<<<<<< HEAD
-        if self.board_space.state == MadMansMorris.BoardSpace.EMPTY_SPACE:
-            self.game.place_piece(self.board_space.space_name)
-        elif self.board_space.state != self.game.current_player.piece_type:
+        if self.board_space.state != MadMansMorris.BoardSpace.EMPTY_SPACE:
             self.game.remove_piece(self.board_space.space_name)
-        
-=======
-        white_deck = self.game.white_player.pieces_in_deck
-        black_deck = self.game.black_player.pieces_in_deck
-        player_board = self.game.current_player.pieces_on_board
-        space_state = self.board_space.state
-        space_name = self.board_space.space_name
-        #Start of game before all pieces are on the board 
-        if white_deck > 0 or black_deck > 0:# or (white_deck == 0 and black_deck == 0 and player_board == 3):
-            if space_state == MadMansMorris.BoardSpace.EMPTY_SPACE:
-                self.game.place_piece(self.board_space.space_name)
-            else:
-                return
-        #here is where the game stops letting me make moves
-        elif white_deck == 0 and black_deck == 0:
-            if space_state == MadMansMorris.BoardSpace.EMPTY_SPACE and space_name in self.board_space.neighbors:
-                self.game.place_piece(self.board_space.space_name)
-            else:
-                return
-        morris_check = self.game.check_for_mill(space_name)
+        else:
+            self.game.place_piece(self.board_space.space_name)
 
-        if not morris_check:
-            self.game.change_player()
-        
-        if morris_check:
-            print("Morris!")
-
-            
-        
-       # if not morris_check and space_state == self.game.other_player.piece_type:
-         #   self.game.remove_piece(self.board_space.space_name)
-          #  self.game.change_player()
-        
-            
-          #  self.game.change_player()
-
-
-            #else:
-                #return
-                #if self.board_space.state != self.game.current_player.piece_type:
-                    #self.game.remove_piece(self.board_space.space_name)
-            
->>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
+        print(self.board_space.space_name)
         return super().mousePressEvent(event)
     
     def __position_from_space_name(self, space_name: str):
@@ -195,6 +142,7 @@ class MainWindow(QMainWindow):
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         self.update_board()
+        self.scene.update()
         return super().mousePressEvent(a0)
     
     def update_board(self):

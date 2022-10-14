@@ -132,10 +132,13 @@ class Game():
             self.current_player.pieces_in_deck -= 1
             self.current_player.pieces_on_board += 1
 
+            self.board.set_space_value(space_name, self.current_player.piece_type)
+
             if self.check_for_mill(space_name):
                 print("Mill!")
             else:
                 self.change_player()
+    
     
     def remove_piece(self, space_name):
         state = self.board.get_space(space_name)
