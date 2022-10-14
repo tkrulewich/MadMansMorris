@@ -18,6 +18,7 @@ class Player():
         #     print("invalid move, try again")
         #     # Player.set_piece(input())
 
+
 class BoardSpace:
     INVALID_SPACE: int = -1
     EMPTY_SPACE: int = 0
@@ -91,10 +92,6 @@ class Game():
             self.spaces["G1"].add_neighbors([self.spaces["G4"], self.spaces["D1"]])
             self.spaces["G7"].add_neighbors([self.spaces["G4"], self.spaces["D7"]])
             
-            
-            for space in invalid_spaces:
-                self.set_space_value(space, BoardSpace.INVALID_SPACE)
-        
         def set_space_value(self, space, value):
             if space in self.spaces:
                 self.spaces[space].state = value
@@ -222,14 +219,6 @@ class Game():
             return True
         
         return False
-
-
-
-
-                
-
-
-        
     
     def move_piece(self, start_space_name, end_space_name):
         if self.game_state != Game.MOVE_PIECE:
