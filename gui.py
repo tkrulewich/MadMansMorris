@@ -1,7 +1,12 @@
 from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
+<<<<<<< HEAD
+from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout
+from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect
+=======
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QLabel,QGraphicsSceneMouseEvent
+>>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
@@ -10,9 +15,20 @@ from PyQt6.QtCore import QRect, Qt
 import MadMansMorris
 
 
+<<<<<<< HEAD
+black_piece_render = QSvgRenderer("images/black_piece.svg")
+black_piece_mill_render = QSvgRenderer("images/black_piece_mill.svg")
+
+white_piece_render = QSvgRenderer("images/white_piece.svg")
+white_piece_mill_render = QSvgRenderer("images/white_piece_mill.svg")
+
+empty_space_render = QSvgRenderer("images/empty_space.svg")
+=======
 black_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/black_piece.svg")
 white_piece_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/white_piece.svg")
 empty_space_render = QSvgRenderer("C:/Users/Adam/Desktop/CS_Shortcuts/MadMansMorris-main/MadMansMorris-main/images/empty_space.svg")
+>>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
+
 
 class QBoardSpace(QGraphicsSvgItem):
     def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game):
@@ -25,9 +41,15 @@ class QBoardSpace(QGraphicsSvgItem):
 
     def update(self):
         if self.board_space.state == MadMansMorris.BoardSpace.BLACK_SPACE:
-            self.setSharedRenderer(black_piece_render)
+            if self.game.check_for_mill(self.board_space.space_name):
+                self.setSharedRenderer(black_piece_mill_render)
+            else:
+                self.setSharedRenderer(black_piece_render)
         elif self.board_space.state == MadMansMorris.BoardSpace.WHITE_SPACE:
-            self.setSharedRenderer(white_piece_render)
+            if self.game.check_for_mill(self.board_space.space_name):
+                self.setSharedRenderer(white_piece_mill_render)
+            else:
+                self.setSharedRenderer(white_piece_render)
         else:
             self.setSharedRenderer(empty_space_render)
         
@@ -37,8 +59,19 @@ class QBoardSpace(QGraphicsSvgItem):
 
         self.setTransformOriginPoint(self.boundingRect().center())
         self.setScale(0.15)
-    
+
+        # if self.game.check_for_mill(self.board_space.space_name):
+        #     colorEffect = QGraphicsColorizeEffect()
+        #     colorEffect.setColor(QColor(100, 100, 0, 200))
+        #     self.setGraphicsEffect(colorEffect)
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
+<<<<<<< HEAD
+        if self.board_space.state == MadMansMorris.BoardSpace.EMPTY_SPACE:
+            self.game.place_piece(self.board_space.space_name)
+        elif self.board_space.state != self.game.current_player.piece_type:
+            self.game.remove_piece(self.board_space.space_name)
+        
+=======
         white_deck = self.game.white_player.pieces_in_deck
         black_deck = self.game.black_player.pieces_in_deck
         player_board = self.game.current_player.pieces_on_board
@@ -79,6 +112,7 @@ class QBoardSpace(QGraphicsSvgItem):
                 #if self.board_space.state != self.game.current_player.piece_type:
                     #self.game.remove_piece(self.board_space.space_name)
             
+>>>>>>> 355a10ad10e727759faeb3af3702f2f730860963
         return super().mousePressEvent(event)
     
     def __position_from_space_name(self, space_name: str):

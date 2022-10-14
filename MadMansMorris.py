@@ -131,12 +131,11 @@ class Game():
         if self.current_player.pieces_in_deck > 0:
             self.current_player.pieces_in_deck -= 1
             self.current_player.pieces_on_board += 1
-        
-        self.board.set_space_value(space_name, self.current_player.piece_type)
 
-
-        #self.change_player()
-        #return make_mill
+            if self.check_for_mill(space_name):
+                print("Mill!")
+            else:
+                self.change_player()
     
     def remove_piece(self, space_name):
         state = self.board.get_space(space_name)
@@ -153,6 +152,9 @@ class Game():
         self.current_player.pieces_on_board -= 1
     
     def check_for_mill(self, space_name):
+        if self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE:
+            return False
+
         space = self.board.spaces[space_name]
 
         visited_horizontal = set([space])
