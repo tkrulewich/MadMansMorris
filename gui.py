@@ -99,48 +99,6 @@ class BoardRenderer(QMainWindow):
         self.centralWidget.setLayout(self.layout)
         self.setCentralWidget(self.centralWidget)
 
-        self.game.place_piece("A7")
-
-        second_player = self.game.current_player
-        self.game.place_piece("B6")
-
-        self.game.place_piece("A4")
-        self.game.place_piece("B4")
-        self.game.place_piece("A1")
-        self.game.remove_piece("B4")
-
-        self.game.place_piece("D6")
-        self.game.place_piece("D7")
-        self.game.place_piece("B2")
-        self.game.place_piece("G7")
-        self.game.remove_piece("B2")
-
-        self.game.place_piece("B2")
-        self.game.place_piece("F2")
-        self.game.place_piece("F4")
-        self.game.place_piece("G1")
-        self.game.place_piece("D2")
-        self.game.place_piece("D1")
-        self.game.remove_piece("D2")
-
-        self.game.place_piece("D2")
-        self.game.place_piece("G4")
-        self.game.remove_piece("D2")
-
-        self.game.place_piece("D2")
-
-        self.game.move_piece("A4", "B4")
-        self.game.move_piece("D6", "D5")
-        
-        self.game.move_piece("B4", "A4")
-        self.game.remove_piece("B6")
-
-        self.game.move_piece("D5", "D6")
-        self.game.move_piece("A4", "B4")
-        self.game.move_piece("D2", "D3")
-        self.game.move_piece("B4", "A4")
-        self.game.remove_piece("B2")
-
         self.update_board()
 
 
@@ -218,12 +176,6 @@ class BoardRenderer(QMainWindow):
             game_over_dialog = QDialog(self)
             game_over_dialog.setWindowTitle("Game Over!")
             game_over_dialog.exec()
-
-
-
-
-
-
 
 
 app = QApplication([])
