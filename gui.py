@@ -2,7 +2,7 @@ from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout
-from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect
+from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
@@ -99,6 +99,48 @@ class BoardRenderer(QMainWindow):
         self.centralWidget.setLayout(self.layout)
         self.setCentralWidget(self.centralWidget)
 
+        self.game.place_piece("A7")
+
+        second_player = self.game.current_player
+        self.game.place_piece("B6")
+
+        self.game.place_piece("A4")
+        self.game.place_piece("B4")
+        self.game.place_piece("A1")
+        self.game.remove_piece("B4")
+
+        self.game.place_piece("D6")
+        self.game.place_piece("D7")
+        self.game.place_piece("B2")
+        self.game.place_piece("G7")
+        self.game.remove_piece("B2")
+
+        self.game.place_piece("B2")
+        self.game.place_piece("F2")
+        self.game.place_piece("F4")
+        self.game.place_piece("G1")
+        self.game.place_piece("D2")
+        self.game.place_piece("D1")
+        self.game.remove_piece("D2")
+
+        self.game.place_piece("D2")
+        self.game.place_piece("G4")
+        self.game.remove_piece("D2")
+
+        self.game.place_piece("D2")
+
+        self.game.move_piece("A4", "B4")
+        self.game.move_piece("D6", "D5")
+        
+        self.game.move_piece("B4", "A4")
+        self.game.remove_piece("B6")
+
+        self.game.move_piece("D5", "D6")
+        self.game.move_piece("A4", "B4")
+        self.game.move_piece("D2", "D3")
+        self.game.move_piece("B4", "A4")
+        self.game.remove_piece("B2")
+
         self.update_board()
 
 
@@ -149,6 +191,9 @@ class BoardRenderer(QMainWindow):
         # self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
         
     def space_clicked(self, space_name: str):
+        if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+            return
+        
         if self.game.game_state == MadMansMorris.Game.PLACE_PIECE:
             self.game.place_piece(space_name)
         elif self.game.game_state == MadMansMorris.Game.REMOVE_PIECE:
@@ -168,6 +213,11 @@ class BoardRenderer(QMainWindow):
                     self.spaces_selected_stack.clear()
         
         self.update_board()
+
+        if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+            game_over_dialog = QDialog(self)
+            game_over_dialog.setWindowTitle("Game Over!")
+            game_over_dialog.exec()
 
 
 

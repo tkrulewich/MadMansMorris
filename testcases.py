@@ -34,12 +34,12 @@ class NewGameTests(unittest.TestCase):
         space_state = self.game.board.get_space("A2")
         self.assertEqual(space_state, BoardSpace.INVALID_SPACE)
     
-    # AC 2.1 (Test Valid White Move)
-    def test_valid_white_move(self):
+    # AC 2.1 (Test Place White Piece)
+    def test_white_player_valid_piece_placement(self):
         if self.game.current_player != self.game.white_player:
             self.game.place_piece("A1")
     
-        
+        self.assertTrue(self.game.current_player.pieces_in_deck > 0)
         self.assertEqual(self.game.current_player, self.game.white_player)
 
         self.game.place_piece("G1")
@@ -47,8 +47,8 @@ class NewGameTests(unittest.TestCase):
 
         self.assertEqual(space, BoardSpace.WHITE_SPACE)
     
-    # AC 2.2 (Test Valid Black Move)
-    def test_valid_black_move(self):
+    # AC 2.2 (Test Place Black Piece)
+    def test_black_player_valid_piece_placement(self):
         if self.game.current_player != self.game.black_player:
             self.game.place_piece("A1")
     
@@ -174,6 +174,78 @@ class NewGameTests(unittest.TestCase):
         self.game.move_piece("D3", "B6")
 
         self.assertEqual(self.game.board.get_space("B6"), second_player.piece_type)
+    
+    # AC 4.0 (Removing a piece)
+    def test_remove_piece(self):
+        first_player = self.game.current_player   
+        self.game.place_piece("A7")
+
+        second_player = self.game.current_player
+        self.game.place_piece("B6")
+
+        self.game.place_piece("A4")
+        self.game.place_piece("B4")
+        self.game.place_piece("A1")
+
+        self.assertTrue(self.game.check_for_mill("A1"))
+
+        self.game.remove_piece("B4")
+
+        self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
+    
+    # AC 5.0 (Determine Game is Over)
+    def test_game_over(self):
+        first_player = self.game.current_player   
+        self.game.place_piece("A7")
+
+        second_player = self.game.current_player
+        self.game.place_piece("B6")
+
+        self.game.place_piece("A4")
+        self.game.place_piece("B4")
+        self.game.place_piece("A1")
+        self.game.remove_piece("B4")
+
+        self.game.place_piece("D6")
+        self.game.place_piece("D7")
+        self.game.place_piece("B2")
+        self.game.place_piece("G7")
+        self.game.remove_piece("B2")
+
+        self.game.place_piece("B2")
+        self.game.place_piece("F2")
+        self.game.place_piece("F4")
+        self.game.place_piece("G1")
+        self.game.place_piece("D2")
+        self.game.place_piece("D1")
+        self.game.remove_piece("D2")
+
+        self.game.place_piece("D2")
+        self.game.place_piece("G4")
+        self.game.remove_piece("D2")
+
+        self.game.place_piece("D2")
+
+        self.game.move_piece("A4", "B4")
+        self.game.move_piece("D6", "D5")
+        
+        self.game.move_piece("B4", "A4")
+        self.game.remove_piece("B6")
+
+        self.game.move_piece("D5", "D6")
+        self.game.move_piece("A4", "B4")
+        self.game.move_piece("D2", "D3")
+        self.game.move_piece("B4", "A4")
+        self.game.remove_piece("B2")
+
+        self.game.move_piece("F4", "E4")
+        self.game.move_piece("G4", "F4")
+        self.game.move_piece("E4", "E5")
+        self.game.move_piece("F4", "G4")
+
+        self.game.remove_piece("E5")
+
+        self.assertTrue(self.game.game_state == Game.GAME_OVER)
 
 
 
@@ -212,17 +284,44 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
         self.game.place_piece("D3")
         self.game.place_piece("F2")
 
-    def test_valid_move_piece(self):
-        self.game.move_piece("B4", "C4")
+    # AC 2.21 (Test Move Piece White Player)
+    def test_white_player_valid_piece_movement(self):
+        if self.game.current_player == self.game.white_player:
+            self.game.move_piece("B4", "C4")
 
-        self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
-        self.assertEqual(self.game.board.get_space("C4"), self.first_player.piece_type)
+            self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("C4"), self.game.white_player.piece_type)
+        else:
+            self.game.move_piece("B4", "C4")
 
-        self.game.move_piece("E4", "E5")
+            self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("C4"), self.game.black_player.piece_type)
 
-        self.assertEqual(self.game.board.get_space("E4"), BoardSpace.EMPTY_SPACE)
-        self.assertEqual(self.game.board.get_space("E5"), self.second_player.piece_type)
+
+            self.game.move_piece("E4", "E5")
+
+            self.assertEqual(self.game.board.get_space("E4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("E5"), self.game.white_player.piece_type)
     
+    # AC 2.22 (Test Move Piece Black Player)
+    def test_white_player_valid_piece_movement(self):
+        if self.game.current_player == self.game.black_player:
+            self.game.move_piece("B4", "C4")
+
+            self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("C4"), self.game.black_player.piece_type)
+        else:
+            self.game.move_piece("B4", "C4")
+
+            self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("C4"), self.game.white_player.piece_type)
+
+
+            self.game.move_piece("E4", "E5")
+
+            self.assertEqual(self.game.board.get_space("E4"), BoardSpace.EMPTY_SPACE)
+            self.assertEqual(self.game.board.get_space("E5"), self.game.black_player.piece_type)
+
     def test_invalid_move_piece_non_adjacent_empty_space(self):
         self.game.move_piece("F4", "C5")
 

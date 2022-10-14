@@ -106,6 +106,7 @@ class Game():
             else:
                 return BoardSpace.INVALID_SPACE
     
+    GAME_OVER : int = -1
     PLACE_PIECE: int = 0
     MOVE_PIECE: int = 1
     REMOVE_PIECE: int = 2
@@ -117,16 +118,21 @@ class Game():
         self.white_player = Player(BoardSpace.WHITE_SPACE)
         self.black_player = Player(BoardSpace.BLACK_SPACE)
 
-        self.current_player : Player = self.coin_toss()
+        self.current_player : Player = None
+        self.next_player : Player = None
+
+        self.coin_toss()
 
         self.game_state = Game.PLACE_PIECE
 
     
     def coin_toss(self) -> Player:
         if random.randint(0, 1) == 0:
-            return self.white_player
+            self.current_player = self.white_player
+            self.next_player = self.black_player
         else:
-            return self.black_player
+            self.current_player = self.black_player
+            self.next_player = self.white_player
 
     def place_piece(self, space_name):
         if self.game_state != Game.PLACE_PIECE:
@@ -163,8 +169,10 @@ class Game():
         self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
         self.current_player.formed_mill_this_turn = False
 
+        
+        self.next_player.pieces_on_board -= 1
         self.change_player()
-        self.current_player.pieces_on_board -= 1
+
     
     def check_for_mill(self, space_name):
         if self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE:
@@ -255,13 +263,14 @@ class Game():
 
 
     def change_player(self):
-        if self.current_player == self.white_player:
-            self.current_player = self.black_player
-            self.other_player = self.white_player
 
-        elif self.current_player == self.black_player:
-            self.current_player = self.white_player
-            self.other_player = self.black_player
+        temp = self.current_player
+        self.current_player = self.next_player
+        self.next_player = temp
+        
+        if self.current_player.pieces_in_deck + self.current_player.pieces_on_board < 3:
+            self.game_state = Game.GAME_OVER
+            return
         
         if self.current_player.pieces_in_deck > 0:
             self.game_state = Game.PLACE_PIECE
