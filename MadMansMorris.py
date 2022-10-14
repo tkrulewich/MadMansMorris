@@ -116,15 +116,14 @@ class Game():
         self.white_player = Player(BoardSpace.WHITE_SPACE)
         self.black_player = Player(BoardSpace.BLACK_SPACE)
 
-        self.coin_toss()
+        self.current_player : Player = self.coin_toss()
+
     
-    def coin_toss(self):
+    def coin_toss(self) -> Player:
         if random.randint(0, 1) == 0:
-            self.current_player = self.white_player
-            self.other_player = self.black_player
+            return self.white_player
         else:
-            self.current_player = self.black_player
-            self.other_player = self.white_player
+            return self.black_player
 
     def place_piece(self, space_name):
         if self.current_player.formed_mill_this_turn:
@@ -246,7 +245,7 @@ class Game():
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
 
-        if self.check_for_mill(space_name):
+        if self.check_for_mill(end_space_name):
             self.current_player.formed_mill_this_turn = True
         else:
             self.current_player.formed_mill_this_turn = False

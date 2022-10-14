@@ -8,6 +8,8 @@ from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtCore import QRect, Qt
 
+from collections import deque
+
 import MadMansMorris
 
 black_piece_render = QSvgRenderer("images/black_piece.svg")
@@ -19,12 +21,13 @@ white_piece_mill_render = QSvgRenderer("images/white_piece_mill.svg")
 empty_space_render = QSvgRenderer("images/empty_space.svg")
 
 class QBoardSpace(QGraphicsSvgItem):
-    def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game):
+    def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game,board_renderer: 'BoardRenderer'):
         super().__init__()
+
+        self.board_renderer = board_renderer
 
         self.board_space : MadMansMorris = board_space
         self.game : MadMansMorris = game
-
         self.update()
 
     def update(self):
@@ -54,12 +57,7 @@ class QBoardSpace(QGraphicsSvgItem):
             self.setGraphicsEffect(colorEffect)
     
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
-        if self.board_space.state != MadMansMorris.BoardSpace.EMPTY_SPACE:
-            self.game.remove_piece(self.board_space.space_name)
-        else:
-            self.game.place_piece(self.board_space.space_name)
-
-        print(self.board_space.space_name)
+        self.board_renderer.space_clicked(self.board_space.space_name)
         return super().mousePressEvent(event)
     
     def __position_from_space_name(self, space_name: str):
@@ -68,9 +66,11 @@ class QBoardSpace(QGraphicsSvgItem):
         return x, y
 
 
-class MainWindow(QMainWindow):
+class BoardRenderer(QMainWindow):
     def __init__(self):
         self.game = MadMansMorris.Game()
+
+        self.spaces_selected_stack = deque()
 
         super().__init__()
         self.setWindowTitle("Mad Man's Morris")
@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
                     self.scene.addEllipse(x * 100 - 6, y * 100 - 6, 12, 12, QPen(QColor(0, 0, 0)), QBrush(QColor(0, 0, 0)))
         
         for space in self.game.board.spaces.values():
-            space_graphic = QBoardSpace(space, self.game)
+            space_graphic = QBoardSpace(space, self.game, self)
             
             self.space_graphics.append(space_graphic)
             self.scene.addItem(space_graphic)
@@ -153,6 +153,28 @@ class MainWindow(QMainWindow):
         # self.scene.setSceneRect(self.scene.itemsBoundingRect())
         # self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
         
+    def space_clicked(self, space_name: str):
+        if self.game.current_player.pieces_in_deck > 0:
+
+            if self.game.board.get_space(space_name) == MadMansMorris.BoardSpace.EMPTY_SPACE:
+                self.game.place_piece(space_name)
+            else:
+                self.game.remove_piece(space_name)
+        else:
+            if len(self.spaces_selected_stack) == 0 and self.game.board.get_space(space_name) == MadMansMorris.BoardSpace.EMPTY_SPACE:
+                return
+
+            if len(self.spaces_selected_stack) == 0:
+                self.spaces_selected_stack.append(space_name)
+            elif len(self.spaces_selected_stack) == 1:
+
+                if (self.spaces_selected_stack[0] == space_name):
+                    self.spaces_selected_stack.pop()
+                else:
+                    self.game.move_piece(self.spaces_selected_stack[0], space_name)
+                    self.spaces_selected_stack.clear()
+        
+        self.update_board()
 
 
 
@@ -163,7 +185,7 @@ class MainWindow(QMainWindow):
 
 app = QApplication([])
 
-window = MainWindow()
+window = BoardRenderer()
 window.show()
 
 app.exec()
