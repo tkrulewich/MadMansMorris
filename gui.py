@@ -50,11 +50,6 @@ class QBoardSpace(QGraphicsSvgItem):
 
         self.setTransformOriginPoint(self.boundingRect().center())
         self.setScale(0.15)
-
-        if self.game.check_for_mill(self.board_space.space_name):
-            colorEffect = QGraphicsColorizeEffect()
-            colorEffect.setColor(QColor(100, 100, 0, 200))
-            self.setGraphicsEffect(colorEffect)
     
     def mousePressEvent(self, event: 'QGraphicsSceneMouseEvent') -> None:
         self.board_renderer.space_clicked(self.board_space.space_name)
@@ -154,13 +149,11 @@ class BoardRenderer(QMainWindow):
         # self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
         
     def space_clicked(self, space_name: str):
-        if self.game.current_player.pieces_in_deck > 0:
-
-            if self.game.board.get_space(space_name) == MadMansMorris.BoardSpace.EMPTY_SPACE:
-                self.game.place_piece(space_name)
-            else:
-                self.game.remove_piece(space_name)
-        else:
+        if self.game.game_state == MadMansMorris.Game.PLACE_PIECE:
+            self.game.place_piece(space_name)
+        elif self.game.game_state == MadMansMorris.Game.REMOVE_PIECE:
+            self.game.remove_piece(space_name)
+        elif self.game.game_state == MadMansMorris.Game.MOVE_PIECE:
             if len(self.spaces_selected_stack) == 0 and self.game.board.get_space(space_name) == MadMansMorris.BoardSpace.EMPTY_SPACE:
                 return
 
