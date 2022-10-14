@@ -246,6 +246,20 @@ class NewGameTests(unittest.TestCase):
         self.game.remove_piece("E5")
 
         self.assertTrue(self.game.game_state == Game.GAME_OVER)
+    
+    # AC 6.0 (Coin Toss Player Start)
+    def test_starting_player_coin_toss(self):
+        white_starts = 0
+        black_starts = 0
+        for i in range(1000):
+            new_game = Game()
+            if new_game.current_player == new_game.white_player:
+                white_starts += 1
+            elif new_game.current_player == new_game.black_player:
+                black_starts += 1
+        
+        self.assertTrue(white_starts > 0)
+        self.assertTrue(black_starts > 0)
 
 
 
@@ -304,7 +318,7 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
             self.assertEqual(self.game.board.get_space("E5"), self.game.white_player.piece_type)
     
     # AC 2.22 (Test Move Piece Black Player)
-    def test_white_player_valid_piece_movement(self):
+    def test_black_player_valid_piece_movement(self):
         if self.game.current_player == self.game.black_player:
             self.game.move_piece("B4", "C4")
 
