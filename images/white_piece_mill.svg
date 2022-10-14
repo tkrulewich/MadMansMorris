@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="102.82035mm"
-   height="103.17861mm"
-   viewBox="0 0 102.82035 103.17861"
+   width="101.11896mm"
+   height="101.11896mm"
+   viewBox="0 0 101.11896 101.11896"
    version="1.1"
    id="svg5"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
@@ -28,8 +28,8 @@
      showborder="true"
      borderlayer="true"
      inkscape:zoom="0.52221046"
-     inkscape:cx="160.85469"
-     inkscape:cy="252.77165"
+     inkscape:cx="82.34228"
+     inkscape:cy="250.85671"
      inkscape:window-width="1366"
      inkscape:window-height="705"
      inkscape:window-x="-8"
@@ -65,7 +65,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(1.432495,1.7907561)">
+     transform="translate(0.55948001,0.55948001)">
     <circle
        style="fill:#ffffff;fill-opacity:1;stroke-width:0.414897"
        id="path943"
@@ -79,11 +79,11 @@
        cy="50"
        r="50" />
     <ellipse
-       style="fill:none;stroke:#f1ff25;stroke-width:2.86499"
+       style="fill:none;stroke:#f1ff25;stroke-width:16.7769;stroke-dasharray:none"
        id="path802"
-       ry="50.156811"
-       rx="49.97768"
-       cy="49.79855"
-       cx="49.97768" />
+       ry="44.641521"
+       rx="43.881542"
+       cy="50.190868"
+       cx="50.444206" />
   </g>
 </svg>
