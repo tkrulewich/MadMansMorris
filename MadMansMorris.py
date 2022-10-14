@@ -12,9 +12,6 @@ class Player():
         self.piece_type = piece_type
 
         
-        self.formed_mill_this_turn = False
-
-        
         # if self.space == BoardSpace.EMPTY_SPACE:
         #     self.player_spaces.append(space)
         # else:
@@ -66,7 +63,7 @@ class Game():
             self.spaces["A7"].add_neighbors([self.spaces["A4"], self.spaces["D7"]])
 
             self.spaces["B2"].add_neighbors([self.spaces["B4"], self.spaces["D2"]])
-            self.spaces["B4"].add_neighbors([self.spaces["A4"], self.spaces["B2"], self.spaces["B2"], self.spaces["C4"]])
+            self.spaces["B4"].add_neighbors([self.spaces["A4"], self.spaces["B2"], self.spaces["B6"], self.spaces["C4"]])
             self.spaces["B6"].add_neighbors([self.spaces["B4"], self.spaces["D6"]])
 
 
@@ -108,6 +105,10 @@ class Game():
                 return self.spaces[space_name].state
             else:
                 return BoardSpace.INVALID_SPACE
+    
+    PLACE_PIECE: int = 0
+    MOVE_PIECE: int = 1
+    REMOVE_PIECE: int = 2
 
     def __init__(self):
         self.unplayed_pieces = 9
@@ -118,6 +119,8 @@ class Game():
 
         self.current_player : Player = self.coin_toss()
 
+        self.game_state = Game.PLACE_PIECE
+
     
     def coin_toss(self) -> Player:
         if random.randint(0, 1) == 0:
@@ -126,7 +129,7 @@ class Game():
             return self.black_player
 
     def place_piece(self, space_name):
-        if self.current_player.formed_mill_this_turn:
+        if self.game_state != Game.PLACE_PIECE:
             return
         
         #make_mill = False
@@ -140,14 +143,13 @@ class Game():
             self.board.set_space_value(space_name, self.current_player.piece_type)
 
             if self.check_for_mill(space_name):
-                self.current_player.formed_mill_this_turn = True
+                self.game_state = Game.REMOVE_PIECE
             else:
-                self.current_player.formed_mill_this_turn = False
                 self.change_player()
     
     
     def remove_piece(self, space_name):
-        if not self.current_player.formed_mill_this_turn:
+        if self.game_state != Game.REMOVE_PIECE:
             return
         
         state = self.board.get_space(space_name)
@@ -222,9 +224,9 @@ class Game():
         
     
     def move_piece(self, start_space_name, end_space_name):
-        if self.current_player.formed_mill_this_turn:
+        if self.game_state != Game.MOVE_PIECE:
             return
-        
+
         if self.current_player.pieces_in_deck > 0:
             return
 
@@ -246,9 +248,8 @@ class Game():
         self.board.spaces[end_space_name].state = self.current_player.piece_type
 
         if self.check_for_mill(end_space_name):
-            self.current_player.formed_mill_this_turn = True
+            self.game_state = Game.REMOVE_PIECE
         else:
-            self.current_player.formed_mill_this_turn = False
             self.change_player()
 
 
@@ -261,3 +262,8 @@ class Game():
         elif self.current_player == self.black_player:
             self.current_player = self.white_player
             self.other_player = self.black_player
+        
+        if self.current_player.pieces_in_deck > 0:
+            self.game_state = Game.PLACE_PIECE
+        else:
+            self.game_state = Game.MOVE_PIECE
