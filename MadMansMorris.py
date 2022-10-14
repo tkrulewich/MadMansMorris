@@ -12,6 +12,9 @@ class Player():
         self.piece_type = piece_type
 
         
+        self.formed_mill_this_turn = False
+
+        
         # if self.space == BoardSpace.EMPTY_SPACE:
         #     self.player_spaces.append(space)
         # else:
@@ -124,6 +127,9 @@ class Game():
             self.other_player = self.white_player
 
     def place_piece(self, space_name):
+        if self.current_player.formed_mill_this_turn:
+            return
+        
         #make_mill = False
         if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
             return
@@ -135,12 +141,16 @@ class Game():
             self.board.set_space_value(space_name, self.current_player.piece_type)
 
             if self.check_for_mill(space_name):
-                print("Mill!")
+                self.current_player.formed_mill_this_turn = True
             else:
+                self.current_player.formed_mill_this_turn = False
                 self.change_player()
     
     
     def remove_piece(self, space_name):
+        if not self.current_player.formed_mill_this_turn:
+            return
+        
         state = self.board.get_space(space_name)
         if (self.board.get_space(space_name) == self.current_player.piece_type or 
             self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE):
@@ -150,6 +160,7 @@ class Game():
             return
         
         self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
+        self.current_player.formed_mill_this_turn = False
 
         self.change_player()
         self.current_player.pieces_on_board -= 1
@@ -212,6 +223,9 @@ class Game():
         
     
     def move_piece(self, start_space_name, end_space_name):
+        if self.current_player.formed_mill_this_turn:
+            return
+        
         if self.current_player.pieces_in_deck > 0:
             return
 
@@ -232,10 +246,11 @@ class Game():
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
 
-        if self.check_for_mill(end_space_name):
-            print("Mill formed") 
-
-        self.change_player()
+        if self.check_for_mill(space_name):
+            self.current_player.formed_mill_this_turn = True
+        else:
+            self.current_player.formed_mill_this_turn = False
+            self.change_player()
 
 
 
