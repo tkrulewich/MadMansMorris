@@ -1,15 +1,17 @@
 from gettext import find
 from operator import index
 import numpy as np
-
+import threading
 import random
+import time
 
 class Player():
-    def __init__(self, piece_type):
+    def __init__(self, piece_type, game):
         self.pieces_in_deck = 9
         self.pieces_on_board = 0
-
+        
         self.piece_type = piece_type
+        self.game = game
 
         
         # if self.space == BoardSpace.EMPTY_SPACE:
@@ -17,7 +19,35 @@ class Player():
         # else:
         #     print("invalid move, try again")
         #     # Player.set_piece(input())
+    def take_turn(self):
+        pass
 
+class ComputerPlayer(Player):
+    def __init__(self, piece_type, game):
+        super().__init__(piece_type, game)
+
+    def take_turn(self):
+        spaces = list(self.game.board.spaces.keys())
+        while self.game.current_player == self:
+            # this is where the computer will take its turn
+            if self.game.game_state == Game.PLACE_PIECE:
+                self.game.place_piece(random.choice(spaces))
+            elif self.game.game_state == Game.REMOVE_PIECE:
+                self.game.remove_piece(random.choice(spaces))
+            elif self.game.game_state == Game.MOVE_PIECE:
+                self.game.move_piece(random.choice(spaces), random.choice(spaces))
+        
+            
+class MoveRecord():
+    def __init__(self, move_type, player : Player, from_space: str, to_space : str = ""):
+        self.move_type = move_type
+        self.player = player
+        self.from_space = from_space
+        self.to_space = to_space
+    
+    def __str__(self) -> str:
+        player_name : str = "BLACK" if self.player.piece_type == BoardSpace.BLACK_SPACE else "WHITE"
+        return f"{player_name} {self.move_type} {self.from_space} {self.to_space}"
 
 class BoardSpace:
     INVALID_SPACE: int = -1
@@ -108,19 +138,23 @@ class Game():
     MOVE_PIECE: int = 1
     REMOVE_PIECE: int = 2
 
-    def __init__(self):
+    def __init__(self, white_player_human : bool = True, black_player_human : bool = True):
         self.unplayed_pieces = 9
         self.board = Game.Board()
 
-        self.white_player = Player(BoardSpace.WHITE_SPACE)
-        self.black_player = Player(BoardSpace.BLACK_SPACE)
+        self.white_player = Player(BoardSpace.WHITE_SPACE, self) if white_player_human else ComputerPlayer(BoardSpace.WHITE_SPACE, self)
+        self.black_player = Player(BoardSpace.BLACK_SPACE, self) if black_player_human else ComputerPlayer(BoardSpace.BLACK_SPACE, self)
 
         self.current_player : Player = None
         self.next_player : Player = None
 
+        self.move_history : list[MoveRecord] = []
+
         self.coin_toss()
 
         self.game_state = Game.PLACE_PIECE
+
+        self.current_player.take_turn()
 
     
     def coin_toss(self) -> Player:
@@ -138,6 +172,9 @@ class Game():
         #make_mill = False
         if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
             return
+
+        # log piece placement
+        self.move_history.append(MoveRecord("PLACE", self.current_player, space_name))
         
         if self.current_player.pieces_in_deck > 0:
             self.current_player.pieces_in_deck -= 1
@@ -162,6 +199,9 @@ class Game():
         
         if (self.check_for_mill(space_name)):
             return
+        
+        # log piece removal
+        self.move_history.append(MoveRecord("REMOVE", self.current_player, space_name))
         
         self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
         self.current_player.formed_mill_this_turn = False
@@ -240,6 +280,8 @@ class Game():
         if end_space_name not in self.board.spaces[start_space_name].neighbors and self.current_player.pieces_on_board > 3:    
             return
         
+        # log piece movement
+        self.move_history.append(MoveRecord("MOVE", self.current_player, start_space_name, end_space_name))
         
         self.board.spaces[start_space_name].state = BoardSpace.EMPTY_SPACE
         self.board.spaces[end_space_name].state = self.current_player.piece_type
@@ -265,3 +307,5 @@ class Game():
             self.game_state = Game.PLACE_PIECE
         else:
             self.game_state = Game.MOVE_PIECE
+        
+        threading.Thread(target=self.current_player.take_turn).start()

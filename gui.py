@@ -63,7 +63,7 @@ class QBoardSpace(QGraphicsSvgItem):
 
 class BoardRenderer(QMainWindow):
     def __init__(self):
-        self.game = MadMansMorris.Game()
+        self.game = MadMansMorris.Game(white_player_human=False)
 
         self.spaces_selected_stack = deque()
 
@@ -79,6 +79,12 @@ class BoardRenderer(QMainWindow):
         self.player_turn_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.layout.addWidget(self.player_turn_text)
+
+        self.last_move_text = QLabel("Last Move: " )
+        self.last_move_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.layout.addWidget(self.last_move_text)
+
 
         self.view = QGraphicsView()
         self.layout.addWidget(self.view)
@@ -137,13 +143,17 @@ class BoardRenderer(QMainWindow):
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
         self.update_board()
-        self.scene.update()
         return super().mousePressEvent(a0)
     
     def update_board(self):
         self.player_turn_text.setText("Player Turn: " + ("Black" if self.game.current_player == self.game.black_player else "White"))
         for space_graphic in self.space_graphics:
             space_graphic.update()
+        
+        if len(self.game.move_history) > 0:
+            self.last_move_text.setText("Last Move: " + str(self.game.move_history[-1]))
+
+        self.scene.update()
         
         # self.scene.setSceneRect(self.scene.itemsBoundingRect())
         # self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
