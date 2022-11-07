@@ -27,16 +27,16 @@
      showgrid="false"
      showborder="true"
      borderlayer="true"
-     inkscape:zoom="1.0444209"
-     inkscape:cx="120.64102"
-     inkscape:cy="171.38684"
-     inkscape:window-width="1366"
-     inkscape:window-height="705"
+     inkscape:zoom="1.4770342"
+     inkscape:cx="133.7139"
+     inkscape:cy="164.51887"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1"
-     showguides="false" />
+     showguides="true" />
   <defs
      id="defs2">
     <linearGradient
@@ -96,7 +96,7 @@
        cy="50.000019"
        r="50.000019" />
     <ellipse
-       style="fill:none;fill-opacity:1;stroke:#f1ff25;stroke-width:17.7429;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:none;fill-opacity:1;stroke:#ff2525;stroke-width:17.7429;stroke-dasharray:none;stroke-opacity:1"
        id="path2125"
        cx="49.050526"
        cy="49.683838"
