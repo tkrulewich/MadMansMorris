@@ -2,11 +2,11 @@ from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
 from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout
-from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog
+from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog, QPushButton
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
-from PyQt6.QtCore import QRect, Qt
+from PyQt6.QtCore import QRect, Qt, pyqtSignal, QThread
 
 from collections import deque
 
@@ -21,7 +21,7 @@ white_piece_mill_render = QSvgRenderer("images/white_piece_mill.svg")
 empty_space_render = QSvgRenderer("images/empty_space.svg")
 
 class QBoardSpace(QGraphicsSvgItem):
-    def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game,board_renderer: 'BoardRenderer'):
+    def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game,board_renderer: 'GameWidget'):
         super().__init__()
 
         self.board_renderer = board_renderer
@@ -61,33 +61,91 @@ class QBoardSpace(QGraphicsSvgItem):
         return x, y
 
 
-class BoardRenderer(QMainWindow):
+class MainMenuWidget(QWidget):
     def __init__(self):
-        self.game = MadMansMorris.Game(white_player_human=False)
-
-        self.spaces_selected_stack = deque()
-
         super().__init__()
-        self.setWindowTitle("Mad Man's Morris")
+
+        self.setLayout(QVBoxLayout())
+        
+        self.human_vs_human_button = QPushButton("Human v. Human")
+        # self.human_vs_human_button.move(100, 100)
+
+        self.human_vs_computer_button = QPushButton("Human v. Computer")
+        # self.human_vs_computer_button.move(100, 100)
+
+        self.layout().addWidget(self.human_vs_human_button)
+        self.layout().addWidget(self.human_vs_computer_button)
+
+class GameOverWidget(QWidget):
+    def __init__(self, winner):
+        super().__init__()
+
+        self.setLayout(QVBoxLayout())
+
+        self.winner_label = QLabel(f"{winner} wins!")
+        self.winner_label.setFont(QFont("Arial", 20))
+
+        self.layout().addWidget(self.winner_label)
+    
+
+class MainApplication(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
         self.setMinimumSize(600, 600)
 
-        self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setWindowTitle("Mad Man's Morris")
+        self.main_menu_widget = MainMenuWidget()
+
+        self.main_menu_widget.human_vs_human_button.clicked.connect(self.human_vs_human_button_clicked)
+        self.main_menu_widget.human_vs_computer_button.clicked.connect(self.human_vs_computer_button_clicked)
+
+        self.setCentralWidget(self.main_menu_widget)
+    
+    def human_vs_human_button_clicked(self):
+        self.game = MadMansMorris.Game(black_player_human=True, white_player_human=True)
+        self.game_widget = GameWidget(self.game)
+
+        self.game_widget.game_over_signal.connect(self.game_over)
+
+        self.setCentralWidget(self.game_widget)
+    
+    def human_vs_computer_button_clicked(self):
+        self.game = MadMansMorris.Game(black_player_human=True, white_player_human=False)
+        self.game_widget = GameWidget(self.game)
+        self.game_widget.game_over_signal.connect(self.game_over)
+
+        self.setCentralWidget(self.game_widget)
+
+    def game_over(self):
+        self.game_over_widget = GameOverWidget("Black")
+        self.setCentralWidget(self.game_over_widget)
+    
+class GameWidget(QWidget):
+    
+    game_over_signal = pyqtSignal()
+
+    def __init__(self, game: MadMansMorris.Game):
+        super().__init__()
+
+        self.game = game
+        self.spaces_selected_stack = deque()
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.player_turn_text = QLabel("Player Turn: " )
         self.player_turn_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.layout.addWidget(self.player_turn_text)
+        self.layout().addWidget(self.player_turn_text)
 
         self.last_move_text = QLabel("Last Move: " )
         self.last_move_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.layout.addWidget(self.last_move_text)
-
+        self.layout().addWidget(self.last_move_text)
 
         self.view = QGraphicsView()
-        self.layout.addWidget(self.view)
+        self.layout().addWidget(self.view)
 
         self.view.setFrameStyle(0)
 
@@ -101,12 +159,7 @@ class BoardRenderer(QMainWindow):
 
         self.draw_board()
 
-        self.centralWidget = QWidget()
-        self.centralWidget.setLayout(self.layout)
-        self.setCentralWidget(self.centralWidget)
-
         self.update_board()
-
 
     def draw_board(self):
         self.scene.addRect(0, 0, 600, 600, QPen(QColor(0, 0, 0)))
@@ -183,14 +236,105 @@ class BoardRenderer(QMainWindow):
         self.update_board()
 
         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
-            game_over_dialog = QDialog(self)
-            game_over_dialog.setWindowTitle("Game Over!")
-            game_over_dialog.exec()
+            self.game_over_signal.emit()
+
+# class BoardRenderer(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+#         self.setWindowTitle("Mad Man's Morris - Main Menu")
+
+#         self.setMinimumSize(600, 600)
+
+#         self.layout = QVBoxLayout()
+#         self.layout.setContentsMargins(0, 0, 0, 0)
+
+#         self.title_text = QLabel("Protoype Game of Nine Men's Morris" )
+#         self.player_turn_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+#         self.layout.addWidget(self.player_turn_text)
+
+#         self.view = QGraphicsView()
+#         self.layout.addWidget(self.view)
+
+#         self.view.setFrameStyle(0)
+
+#         self.setStyleSheet("background-color: #FFFFFF; color: #000000; font-family: Arial; font-size: 20px;")
+
+#         self.scene = QGraphicsScene()
+#         self.view.setScene(self.scene)
+#         self.view.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+#         self.human_vs_human_button = QPushButton("Human v. Human", self)
+#         self.human_vs_human_button.move(100, 100)
+
+#         self.human_vs_computer_button = QPushButton("Human v. Human", self)
+#         self.human_vs_computer_button.move(100, 100)
+
+#         self.human_vs_human_button.clicked.connect(self.game.coin_toss())
+#         self.layout.addWidget(self.human_vs_human_button)
+
+#         def set_computer_player(self):
+#             if 
+
+#         self.draw_board()
+
+#         self.centralWidget = QWidget()
+#         self.centralWidget.setLayout(self.layout)
+#         self.setCentralWidget(self.centralWidget)
+
+#         self.update_board()
+
+
+#     def draw_board(self):
+        
+#         self.scene.addRect(100, 100, 400, 400, QPen(QColor(0, 0, 0)))
+   
+#     def resizeEvent(self, a0: QResizeEvent) -> None:
+#         self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
+#         return super().resizeEvent(a0)
+
+#     def mousePressEvent(self, a0: QMouseEvent) -> None:
+#         self.update_board()
+#         return super().mousePressEvent(a0)
+    
+#     def update_board(self):
+#         self.player_turn_text.setText("Player Turn: " + ("Black" if self.game.current_player == self.game.black_player else "White"))
+#         for space_graphic in self.space_graphics:
+#             space_graphic.update()
+                
+#     def space_clicked(self, space_name: str):
+#         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+#             return
+        
+#         if self.game.game_state == MadMansMorris.Game.PLACE_PIECE:
+#             self.game.place_piece(space_name)
+#         elif self.game.game_state == MadMansMorris.Game.REMOVE_PIECE:
+#             self.game.remove_piece(space_name)
+#         elif self.game.game_state == MadMansMorris.Game.MOVE_PIECE:
+#             if len(self.spaces_selected_stack) == 0 and self.game.board.get_space(space_name) == MadMansMorris.BoardSpace.EMPTY_SPACE:
+#                 return
+
+#             if len(self.spaces_selected_stack) == 0:
+#                 self.spaces_selected_stack.append(space_name)
+#             elif len(self.spaces_selected_stack) == 1:
+
+#                 if (self.spaces_selected_stack[0] == space_name):
+#                     self.spaces_selected_stack.pop()
+#                 else:
+#                     self.game.move_piece(self.spaces_selected_stack[0], space_name)
+#                     self.spaces_selected_stack.clear()
+        
+#         self.update_board()
+
+#         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+#             game_over_dialog = QDialog(self)
+#             game_over_dialog.setWindowTitle("Game Over!")
+#             game_over_dialog.exec()
 
 
 app = QApplication([])
 
-window = BoardRenderer()
+window = MainApplication()
 window.show()
 
 app.exec()
