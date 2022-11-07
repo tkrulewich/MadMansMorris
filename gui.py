@@ -200,10 +200,11 @@ class MainApplication(QMainWindow):
         self.exit_action = QAction("Exit", self)
         self.exit_action.triggered.connect(self.close)
 
-        self.main_menu_action = QAction("New Game", self)
+        self.new_game_action = QAction("New Game", self)
 
         self.game_menu.triggered.connect(self.show_main_menu)
 
+        self.game_menu.addAction(self.new_game_action)
         self.game_menu.addAction(self.exit_action)
 
 
