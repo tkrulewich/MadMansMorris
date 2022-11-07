@@ -384,7 +384,7 @@ class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
         # if no mmoves have been made, then human is starting, set to true
         self.human_starts : bool = len(self.game.move_history) == 0
     
-    def test_computer_places_piece_on_first_time(self):
+    def test_computer_places_piece_on_first_turn(self):
         if self.human_starts:
             self.game.place_piece("A7")
             self.assertEqual(self.game.board.get_space("A7"), self.human_player.piece_type)
@@ -398,7 +398,7 @@ class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
     
     def test_computer_moves_piece_after_deck_empty(self):
         while self.human_player.pieces_in_deck > 0:
-            available_spaces = [ space for space in self.game.board.spaces.values() if space.state == BoardSpace.EMPTY_SPACE ]
+            available_spaces = list(self.game.board.spaces.values())
             random_space = random.choice(available_spaces)
 
             if self.game.game_state == Game.PLACE_PIECE:
@@ -406,21 +406,38 @@ class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
             elif self.game.game_state == Game.REMOVE_PIECE:
                 self.game.remove_piece(random_space.space_name)
         
-        human_spaces = [ space for space in self.game.board.spaces.values() if space.state == self.human_player.piece_type ]
-        empty_spaces_adjacent_to_human_spaces = []
+        # the computer took its turn automatically (and should have moved a piece)
 
-        # if the human starts he or she will be the first person to move a piece
+        self.assertTrue(self.game.game_state == Game.MOVE_PIECE or self.game.game_state == Game.REMOVE_PIECE)       
+        self.assertTrue(self.human_player.pieces_in_deck == 0)
+
+
         if self.human_starts:
-            for space in human_spaces:
-                for adjacent_space in space.neighbors.values():
-                    if adjacent_space.space_state == BoardSpace.EMPTY_SPACE:
-                        self.game.move_piece(space.space_name, adjacent_space.space_name)
-                        break
+            while self.game.current_player == self.human_player:
+                available_spaces = list(self.game.board.spaces.values())
 
-        # the computer will have moved a piece now
-        last_move = self.game.move_history[-1]
-        self.assertEqual(last_move.move_type, "MOVE")
-        self.assertEqual(last_move.player, self.computer_player)
+                random_space1 = random.choice(available_spaces)
+                random_space2 = random.choice(available_spaces)
+
+                self.game.move_piece(random_space1.space_name, random_space1.space_name)
+
+                if (self.game.game_state == Game.REMOVE_PIECE):
+                    while self.game.current_player == self.human_player:
+                        available_spaces = list(self.game.board.spaces.values())
+                        random_space = random.choice(available_spaces)
+
+                        self.game.remove_piece(random_space.space_name)
+
+            last_move = self.game.move_history[-1]
+
+            self.assertTrue(last_move.move_type == "MOVE" or last_move.move_type == "REMOVE")
+
+            if last_move.move_type == "REMOVE":
+                second_last_move = self.game.move_history[-2]
+
+                self.assertTrue(second_last_move.move_type == "MOVE")
+        
+
 
 
 if __name__ == '__main__':
