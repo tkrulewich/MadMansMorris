@@ -143,6 +143,8 @@ class Game():
         self.unplayed_pieces = 9
         self.board = Game.Board()
 
+        self.turn_thead = None
+
         self.white_player = Player(BoardSpace.WHITE_SPACE, self) if white_player_human else ComputerPlayer(BoardSpace.WHITE_SPACE, self)
         self.black_player = Player(BoardSpace.BLACK_SPACE, self) if black_player_human else ComputerPlayer(BoardSpace.BLACK_SPACE, self)
 
@@ -317,4 +319,5 @@ class Game():
         else:
             self.game_state = Game.MOVE_PIECE
         
-        threading.Thread(target=self.current_player.take_turn).start()
+        self.turn_thead = threading.Thread(target=self.current_player.take_turn)
+        self.turn_thead.start()

@@ -179,7 +179,7 @@ class MainApplication(QMainWindow):
         self.game = MadMansMorris.Game(self.main_menu_widget.white_player_human, self.main_menu_widget.black_player_human)
         self.game_widget = GameWidget(self.game)
         
-        self.game_widget.game_over_signal.connect(self.game_over)
+        self.game_widget.board_monitor.game_over_signal.connect(self.game_over)
         self.setCentralWidget(self.game_widget)
 
     def game_over(self):
@@ -200,11 +200,10 @@ class MainApplication(QMainWindow):
         self.exit_action = QAction("Exit", self)
         self.exit_action.triggered.connect(self.close)
 
-        self.main_menu_action = QAction("Main Menu", self)
+        self.main_menu_action = QAction("New Game", self)
 
-        self.game_menu.addAction(self.main_menu_action)
         self.game_menu.triggered.connect(self.show_main_menu)
-        
+
         self.game_menu.addAction(self.exit_action)
 
 
@@ -213,6 +212,7 @@ class MainApplication(QMainWindow):
 
 class BoardUpdater(QThread):
     update_board_signal = pyqtSignal()
+    game_over_signal = pyqtSignal()
 
     def __init__(self, game: MadMansMorris.Game):
         super().__init__()
@@ -225,11 +225,14 @@ class BoardUpdater(QThread):
                 self.update_board_signal.emit()
                 number_moves = len(self.game.move_history)
             time.sleep(0.1)
+        
+        if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+            if self.game.turn_thead != None:
+                # wait for thread to finish
+                self.game.turn_thead.join()
+            self.game_over_signal.emit()
 
 class GameWidget(QWidget):
-    
-    game_over_signal = pyqtSignal()
-
     def __init__(self, game: MadMansMorris.Game):
         super().__init__()
 
@@ -333,7 +336,7 @@ class GameWidget(QWidget):
             return
 
         if self.game.game_state == MadMansMorris.Game.PLACE_PIECE:
-            Thread(self.game.place_piece(space_name)).start()
+            self.game.place_piece(space_name)
         elif self.game.game_state == MadMansMorris.Game.REMOVE_PIECE:
             self.game.remove_piece(space_name)
         elif self.game.game_state == MadMansMorris.Game.MOVE_PIECE:
@@ -349,10 +352,6 @@ class GameWidget(QWidget):
                 else:
                     self.game.move_piece(self.spaces_selected_stack[0], space_name)
                     self.spaces_selected_stack.clear()
-
-        if self.game.game_state == MadMansMorris.Game.GAME_OVER:
-            self.thread.exit()
-            self.game_over_signal.emit()
 
 app = QApplication([])
 
