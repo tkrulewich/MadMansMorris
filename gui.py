@@ -148,8 +148,12 @@ class GameOverWidget(QWidget):
 
         self.setLayout(QVBoxLayout())
 
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.winner_label = QLabel(f"{winner} wins!")
         self.winner_label.setFont(QFont("Arial", 20))
+        
 
         self.play_again_button = QPushButton("Play Again")
 
