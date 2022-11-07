@@ -13,12 +13,6 @@ class Player():
         self.piece_type = piece_type
         self.game = game
 
-        
-        # if self.space == BoardSpace.EMPTY_SPACE:
-        #     self.player_spaces.append(space)
-        # else:
-        #     print("invalid move, try again")
-        #     # Player.set_piece(input())
     def take_turn(self):
         pass
 
@@ -88,7 +82,8 @@ class Game():
 
                     if space_name not in invalid_spaces:
                         self.spaces[space_name] = BoardSpace(space_name)
-            
+
+                      
             self.spaces["A1"].add_neighbors([self.spaces["A4"], self.spaces["D1"]])
             self.spaces["A4"].add_neighbors([self.spaces["A1"], self.spaces["A7"], self.spaces["B4"]])
             self.spaces["A7"].add_neighbors([self.spaces["A4"], self.spaces["D7"]])
