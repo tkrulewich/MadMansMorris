@@ -374,7 +374,54 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
         self.assertEqual(self.game.check_for_mill("F2"), True)
     
         
+class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
+    def setUp(self):
+        self.game : Game = Game(white_player_human=True, black_player_human=False)
+
+        self.human_player = self.game.white_player
+        self.computer_player = self.game.black_player
+
+        # if no mmoves have been made, then human is starting, set to true
+        self.human_starts : bool = len(self.game.move_history) == 0
     
+    def test_computer_places_piece_on_first_time(self):
+        if self.human_starts:
+            self.game.place_piece("A7")
+            self.assertEqual(self.game.board.get_space("A7"), self.human_player.piece_type)
+
+        # the computer took its turn automatically (and should have placed a piece)
+        last_move = self.game.move_history[-1]
+
+        self.assertEqual(self.game.board.get_space(last_move.start_space), self.computer_player.piece_type)
+        self.assertEqual(last_move.move_type, "PLACE")
+
+    
+    def test_computer_moves_piece_after_deck_empty(self):
+        while self.human_player.pieces_in_deck > 0:
+            available_spaces = [ space for space in self.game.board.spaces.values() if space.state == BoardSpace.EMPTY_SPACE ]
+            random_space = random.choice(available_spaces)
+
+            if self.game.game_state == Game.PLACE_PIECE:
+                self.game.place_piece(random_space.space_name)
+            elif self.game.game_state == Game.REMOVE_PIECE:
+                self.game.remove_piece(random_space.space_name)
+        
+        human_spaces = [ space for space in self.game.board.spaces.values() if space.state == self.human_player.piece_type ]
+        empty_spaces_adjacent_to_human_spaces = []
+
+        # if the human starts he or she will be the first person to move a piece
+        if self.human_starts:
+            for space in human_spaces:
+                for adjacent_space in space.neighbors.values():
+                    if adjacent_space.space_state == BoardSpace.EMPTY_SPACE:
+                        self.game.move_piece(space.space_name, adjacent_space.space_name)
+                        break
+
+        # the computer will have moved a piece now
+        last_move = self.game.move_history[-1]
+        self.assertEqual(last_move.move_type, "MOVE")
+        self.assertEqual(last_move.player, self.computer_player)
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromModule( sys.modules[__name__] )

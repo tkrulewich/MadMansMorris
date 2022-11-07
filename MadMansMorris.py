@@ -39,15 +39,15 @@ class ComputerPlayer(Player):
         
             
 class MoveRecord():
-    def __init__(self, move_type, player : Player, from_space: str, to_space : str = ""):
+    def __init__(self, move_type, player : Player, start_space: str, end_space : str = ""):
         self.move_type = move_type
         self.player = player
-        self.from_space = from_space
-        self.to_space = to_space
+        self.start_space = start_space
+        self.end_space = end_space
     
     def __str__(self) -> str:
         player_name : str = "BLACK" if self.player.piece_type == BoardSpace.BLACK_SPACE else "WHITE"
-        return f"{player_name} {self.move_type} {self.from_space} {self.to_space}"
+        return f"{player_name} {self.move_type} {self.start_space} {self.end_space}"
 
 class BoardSpace:
     INVALID_SPACE: int = -1
