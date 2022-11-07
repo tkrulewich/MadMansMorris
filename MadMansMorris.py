@@ -27,6 +27,7 @@ class ComputerPlayer(Player):
         super().__init__(piece_type, game)
 
     def take_turn(self):
+        time.sleep(0.5)
         spaces = list(self.game.board.spaces.keys())
         while self.game.current_player == self:
             # this is where the computer will take its turn
@@ -316,4 +317,4 @@ class Game():
         else:
             self.game_state = Game.MOVE_PIECE
         
-        self.current_player.take_turn()
+        threading.Thread(target=self.current_player.take_turn).start()

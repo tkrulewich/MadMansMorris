@@ -6,7 +6,9 @@ from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsC
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
-from PyQt6.QtCore import QRect, Qt, pyqtSignal, QThread
+from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject, QThread
+from threading import Thread
+import time
 
 from collections import deque
 
@@ -143,7 +145,22 @@ class MainApplication(QMainWindow):
         self.game_over_widget.play_again_button.clicked.connect(self.show_main_menu)
         self.setCentralWidget(self.game_over_widget)
 
+
+class BoardUpdater(QThread):
+    update_board_signal = pyqtSignal()
+
+    def __init__(self, game: MadMansMorris.Game):
+        super().__init__()
+        self.game = game
     
+    def run(self):
+        number_moves = 0
+        while self.game.game_state != MadMansMorris.Game.GAME_OVER:
+            if number_moves != len(self.game.move_history):
+                self.update_board_signal.emit()
+                number_moves = len(self.game.move_history)
+            time.sleep(0.1)
+
 class GameWidget(QWidget):
     
     game_over_signal = pyqtSignal()
@@ -184,6 +201,16 @@ class GameWidget(QWidget):
 
         self.update_board()
 
+        self.board_monitor = BoardUpdater(self.game)
+        self.board_monitor.update_board_signal.connect(self.update_board)
+
+        self.thread = QThread()
+        # Step 4: Move worker to the thread
+        self.board_monitor.moveToThread(self.thread)
+        self.thread.started.connect(self.board_monitor.run)
+
+        self.thread.start()
+
     def draw_board(self):
         self.scene.addRect(0, 0, 600, 600, QPen(QColor(0, 0, 0)))
         self.scene.addRect(100, 100, 400, 400, QPen(QColor(0, 0, 0)))
@@ -218,7 +245,6 @@ class GameWidget(QWidget):
         return super().resizeEvent(a0)
 
     def mousePressEvent(self, a0: QMouseEvent) -> None:
-        self.update_board()
         return super().mousePressEvent(a0)
     
     def update_board(self):
@@ -238,8 +264,11 @@ class GameWidget(QWidget):
         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
             return
         
+        if type(self.game.current_player) == MadMansMorris.ComputerPlayer:
+            return
+
         if self.game.game_state == MadMansMorris.Game.PLACE_PIECE:
-            self.game.place_piece(space_name)
+            Thread(self.game.place_piece(space_name)).start()
         elif self.game.game_state == MadMansMorris.Game.REMOVE_PIECE:
             self.game.remove_piece(space_name)
         elif self.game.game_state == MadMansMorris.Game.MOVE_PIECE:
@@ -255,10 +284,9 @@ class GameWidget(QWidget):
                 else:
                     self.game.move_piece(self.spaces_selected_stack[0], space_name)
                     self.spaces_selected_stack.clear()
-        
-        self.update_board()
 
         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
+            self.thread.exit()
             self.game_over_signal.emit()
 
 app = QApplication([])
