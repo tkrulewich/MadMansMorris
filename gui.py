@@ -1,12 +1,12 @@
 from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout
-from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog, QPushButton
-from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent
+from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QHBoxLayout, QMenuBar
+from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog, QPushButton, QToolButton
+from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent, QIcon, QAction
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
-from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject, QThread
+from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject, QThread, QSize
 from threading import Thread
 import time
 
@@ -61,6 +61,46 @@ class QBoardSpace(QGraphicsSvgItem):
         x = ord(space_name[0]) - 65
         y = 7 - int(space_name[1]) 
         return x, y
+    
+
+class HumanComputerToggleButton(QWidget):
+    human_icon = QIcon("images/human.svg")
+    computer_icon = QIcon("images/computer.svg")
+
+    human_computer_signal = pyqtSignal()
+
+    def __init__(self, player: str):
+        super().__init__()
+
+        self.human = True
+        self.player = player
+
+        self.button = QToolButton()
+        self.button.setIcon(self.human_icon)
+        self.button.setIconSize(QSize(50, 50))
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(30, 30, 30, 30)
+        self.layout().setSpacing(0)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.label = QLabel(f"{self.player}")
+
+        self.button.clicked.connect(self.toggle)
+
+        self.layout().addWidget(self.label)
+        self.layout().addWidget(self.button)
+
+    def toggle(self):
+        self.human = not self.human
+
+        if self.human:
+            self.button.setIcon(self.human_icon)
+        else:
+            self.button.setIcon(self.computer_icon)
+        
+        self.human_computer_signal.emit()
+        
 
 
 class MainMenuWidget(QWidget):
@@ -68,35 +108,39 @@ class MainMenuWidget(QWidget):
         super().__init__()
 
         self.setLayout(QVBoxLayout())
+
+        self.main_menu_instructions = QLabel("Welcome to Mad Man's Morris. Please select computer or human for each player.")
+        self.main_menu_instructions.setStyleSheet("font-size: 20px;text-align: center;")
+
+        self.player_toggles_layout = QHBoxLayout()
+        self.player_toggles_layout.setContentsMargins(0, 0, 0, 0)
+        self.player_toggles_layout.setSpacing(0)
+        self.player_toggles_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+
         
-        self.white_player_human_button = QPushButton("White Player: Human")
-        self.black_player_human_button = QPushButton("Black Player: Human")\
+        self.white_player_human_button = HumanComputerToggleButton("White Player")
+        self.black_player_human_button = HumanComputerToggleButton("Black Player")
+
+        self.player_toggles_layout.addWidget(self.white_player_human_button)
+        self.player_toggles_layout.addWidget(self.black_player_human_button)
+
+        self.white_player_human_button.human_computer_signal.connect(self.__computer_human_toggle_clicked)
+        self.black_player_human_button.human_computer_signal.connect(self.__computer_human_toggle_clicked)
         
         self.white_player_human = True
         self.black_player_human = True
 
-        self.white_player_human_button.clicked.connect(self.__white_player_human_button_clicked)
-        self.black_player_human_button.clicked.connect(self.__black_player_human_button_clicked)
-
         self.start_game_button = QPushButton("Start Game")
 
-        self.layout().addWidget(self.white_player_human_button)
-        self.layout().addWidget(self.black_player_human_button)
+        self.layout().addWidget(self.main_menu_instructions)
+        self.layout().addLayout(self.player_toggles_layout)
         self.layout().addWidget(self.start_game_button)
-    
-    def __white_player_human_button_clicked(self):
-        self.white_player_human = not self.white_player_human
-        if self.white_player_human:
-            self.white_player_human_button.setText("White Player: Human")
-        else:
-            self.white_player_human_button.setText("White Player: Computer")
-    
-    def __black_player_human_button_clicked(self):
-        self.black_player_human = not self.black_player_human
-        if self.black_player_human:
-            self.black_player_human_button.setText("Black Player: Human")
-        else:
-            self.black_player_human_button.setText("Black Player: Computer")
+
+    def __computer_human_toggle_clicked(self):
+        self.white_player_human = self.white_player_human_button.human
+        self.black_player_human = self.black_player_human_button.human
 
 class GameOverWidget(QWidget):
     def __init__(self, winner):
@@ -116,6 +160,8 @@ class GameOverWidget(QWidget):
 class MainApplication(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self._create_menu_bar()
 
         self.setMinimumSize(600, 600)
 
@@ -144,6 +190,25 @@ class MainApplication(QMainWindow):
         self.game_over_widget = GameOverWidget(winner)
         self.game_over_widget.play_again_button.clicked.connect(self.show_main_menu)
         self.setCentralWidget(self.game_over_widget)
+    
+    def _create_menu_bar(self):
+        self.menu_bar = QMenuBar()
+        self.menu_bar.setNativeMenuBar(False)
+
+        self.game_menu = self.menu_bar.addMenu("Game")
+
+        self.exit_action = QAction("Exit", self)
+        self.exit_action.triggered.connect(self.close)
+
+        self.main_menu_action = QAction("Main Menu", self)
+
+        self.game_menu.addAction(self.main_menu_action)
+        self.game_menu.triggered.connect(self.show_main_menu)
+        
+        self.game_menu.addAction(self.exit_action)
+
+
+        self.setMenuBar(self.menu_bar)
 
 
 class BoardUpdater(QThread):
