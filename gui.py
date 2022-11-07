@@ -85,7 +85,10 @@ class GameOverWidget(QWidget):
         self.winner_label = QLabel(f"{winner} wins!")
         self.winner_label.setFont(QFont("Arial", 20))
 
+        self.play_again_button = QPushButton("Play Again")
+
         self.layout().addWidget(self.winner_label)
+        self.layout().addWidget(self.play_again_button)
     
 
 class MainApplication(QMainWindow):
@@ -95,11 +98,14 @@ class MainApplication(QMainWindow):
         self.setMinimumSize(600, 600)
 
         self.setWindowTitle("Mad Man's Morris")
-        self.main_menu_widget = MainMenuWidget()
 
+        self.show_main_menu()
+    
+    def show_main_menu(self):
+        self.main_menu_widget = MainMenuWidget()
         self.main_menu_widget.human_vs_human_button.clicked.connect(self.human_vs_human_button_clicked)
         self.main_menu_widget.human_vs_computer_button.clicked.connect(self.human_vs_computer_button_clicked)
-
+        
         self.setCentralWidget(self.main_menu_widget)
     
     def human_vs_human_button_clicked(self):
@@ -118,8 +124,14 @@ class MainApplication(QMainWindow):
         self.setCentralWidget(self.game_widget)
 
     def game_over(self):
-        self.game_over_widget = GameOverWidget("Black")
+        current = self.game.current_player
+
+        winner = "Black" if current == self.game.white_player else "White"
+
+        self.game_over_widget = GameOverWidget(winner)
+        self.game_over_widget.play_again_button.clicked.connect(self.show_main_menu)
         self.setCentralWidget(self.game_over_widget)
+
     
 class GameWidget(QWidget):
     
