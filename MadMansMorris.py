@@ -198,7 +198,15 @@ class Game():
             return
         
         if (self.check_for_mill(space_name)):
-            return
+            opponent_has_piece_not_in_mill = False
+
+            for space in self.board.spaces:
+                if self.board.spaces[space].state == self.next_player.piece_type and not self.check_for_mill(space):
+                    opponent_has_piece_not_in_mill = True
+                    break
+            
+            if opponent_has_piece_not_in_mill:
+                return
         
         # log piece removal
         self.move_history.append(MoveRecord("REMOVE", self.current_player, space_name))
@@ -308,4 +316,4 @@ class Game():
         else:
             self.game_state = Game.MOVE_PIECE
         
-        threading.Thread(target=self.current_player.take_turn).start()
+        self.current_player.take_turn()
