@@ -67,14 +67,34 @@ class MainMenuWidget(QWidget):
 
         self.setLayout(QVBoxLayout())
         
-        self.human_vs_human_button = QPushButton("Human v. Human")
-        # self.human_vs_human_button.move(100, 100)
+        self.white_player_human_button = QPushButton("White Player: Human")
+        self.black_player_human_button = QPushButton("Black Player: Human")\
+        
+        self.white_player_human = True
+        self.black_player_human = True
 
-        self.human_vs_computer_button = QPushButton("Human v. Computer")
-        # self.human_vs_computer_button.move(100, 100)
+        self.white_player_human_button.clicked.connect(self.__white_player_human_button_clicked)
+        self.black_player_human_button.clicked.connect(self.__black_player_human_button_clicked)
 
-        self.layout().addWidget(self.human_vs_human_button)
-        self.layout().addWidget(self.human_vs_computer_button)
+        self.start_game_button = QPushButton("Start Game")
+
+        self.layout().addWidget(self.white_player_human_button)
+        self.layout().addWidget(self.black_player_human_button)
+        self.layout().addWidget(self.start_game_button)
+    
+    def __white_player_human_button_clicked(self):
+        self.white_player_human = not self.white_player_human
+        if self.white_player_human:
+            self.white_player_human_button.setText("White Player: Human")
+        else:
+            self.white_player_human_button.setText("White Player: Computer")
+    
+    def __black_player_human_button_clicked(self):
+        self.black_player_human = not self.black_player_human
+        if self.black_player_human:
+            self.black_player_human_button.setText("Black Player: Human")
+        else:
+            self.black_player_human_button.setText("Black Player: Computer")
 
 class GameOverWidget(QWidget):
     def __init__(self, winner):
@@ -103,24 +123,15 @@ class MainApplication(QMainWindow):
     
     def show_main_menu(self):
         self.main_menu_widget = MainMenuWidget()
-        self.main_menu_widget.human_vs_human_button.clicked.connect(self.human_vs_human_button_clicked)
-        self.main_menu_widget.human_vs_computer_button.clicked.connect(self.human_vs_computer_button_clicked)
+        self.main_menu_widget.start_game_button.clicked.connect(self.start_game)
         
         self.setCentralWidget(self.main_menu_widget)
     
-    def human_vs_human_button_clicked(self):
-        self.game = MadMansMorris.Game(black_player_human=True, white_player_human=True)
+    def start_game(self):
+        self.game = MadMansMorris.Game(self.main_menu_widget.white_player_human, self.main_menu_widget.black_player_human)
         self.game_widget = GameWidget(self.game)
-
+        
         self.game_widget.game_over_signal.connect(self.game_over)
-
-        self.setCentralWidget(self.game_widget)
-    
-    def human_vs_computer_button_clicked(self):
-        self.game = MadMansMorris.Game(black_player_human=True, white_player_human=False)
-        self.game_widget = GameWidget(self.game)
-        self.game_widget.game_over_signal.connect(self.game_over)
-
         self.setCentralWidget(self.game_widget)
 
     def game_over(self):
