@@ -409,7 +409,14 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
 
         last_move = self.game.move_history[-1]
 
-        self.assertTrue(last_move.move_type == Game.MOVE_PIECE or last_move.move_type == Game.REMOVE_PIECE)
+        self.assertTrue(last_move.player == computer_player)
+        self.assertTrue(last_move.move_type == "MOVE" or last_move.move_type == "REMOVE")
+
+        if last_move.move_type == "REMOVE":
+            second_last_move = self.game.move_history[-2]
+
+            self.assertTrue(second_last_move.player == self.game.current_player)
+            self.assertTrue(second_last_move.move_type == "MOVE")
 
 
     def test_invalid_move_piece_non_adjacent_empty_space(self):
