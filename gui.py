@@ -227,6 +227,8 @@ class BoardUpdater(QThread):
         number_moves = 0
         while self.game.game_state != MadMansMorris.Game.GAME_OVER:
             if number_moves != len(self.game.move_history):
+                if type(self.game.move_history[-1].player) == MadMansMorris.ComputerPlayer:
+                    time.sleep(0.4)
                 self.update_board_signal.emit()
                 number_moves = len(self.game.move_history)
             time.sleep(0.1)
@@ -329,6 +331,9 @@ class GameWidget(QWidget):
             self.last_move_text.setText("Last Move: " + str(self.game.move_history[-1]))
 
         self.scene.update()
+
+        if type(self.game.current_player) == MadMansMorris.ComputerPlayer:
+            self.game.current_player.take_turn()
         
         # self.scene.setSceneRect(self.scene.itemsBoundingRect())
         # self.view.fitInView(self.scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)

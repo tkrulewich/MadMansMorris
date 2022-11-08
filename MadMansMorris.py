@@ -12,13 +12,6 @@ class Player():
         
         self.piece_type = piece_type
         self.game = game
-
-        
-        # if self.space == BoardSpace.EMPTY_SPACE:
-        #     self.player_spaces.append(space)
-        # else:
-        #     print("invalid move, try again")
-        #     # Player.set_piece(input())
     def take_turn(self):
         pass
 
@@ -27,7 +20,6 @@ class ComputerPlayer(Player):
         super().__init__(piece_type, game)
 
     def take_turn(self):
-        time.sleep(0.5)
         spaces = list(self.game.board.spaces.keys())
         while self.game.current_player == self:
             # this is where the computer will take its turn
@@ -68,6 +60,7 @@ class BoardSpace:
     def add_neighbors(self, spaces):
         for space in spaces:
             self.add_neighbor(space)
+        
 
 
 
@@ -147,6 +140,8 @@ class Game():
 
         self.white_player = Player(BoardSpace.WHITE_SPACE, self) if white_player_human else ComputerPlayer(BoardSpace.WHITE_SPACE, self)
         self.black_player = Player(BoardSpace.BLACK_SPACE, self) if black_player_human else ComputerPlayer(BoardSpace.BLACK_SPACE, self)
+
+        self.winner : Player = None
 
         self.current_player : Player = None
         self.next_player : Player = None
@@ -311,6 +306,7 @@ class Game():
         self.next_player = temp
         
         if self.current_player.pieces_in_deck + self.current_player.pieces_on_board < 3:
+            self.winner = self.next_player
             self.game_state = Game.GAME_OVER
             return
         
@@ -318,6 +314,3 @@ class Game():
             self.game_state = Game.PLACE_PIECE
         else:
             self.game_state = Game.MOVE_PIECE
-        
-        self.turn_thead = threading.Thread(target=self.current_player.take_turn)
-        self.turn_thead.start()
