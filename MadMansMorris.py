@@ -136,7 +136,7 @@ class Game():
         self.unplayed_pieces = 9
         self.board = Game.Board()
 
-        self.turn_thead = None
+        self.starting_player : Player = None
 
         self.white_player = Player(BoardSpace.WHITE_SPACE, self) if white_player_human else ComputerPlayer(BoardSpace.WHITE_SPACE, self)
         self.black_player = Player(BoardSpace.BLACK_SPACE, self) if black_player_human else ComputerPlayer(BoardSpace.BLACK_SPACE, self)
@@ -162,6 +162,8 @@ class Game():
         else:
             self.current_player = self.black_player
             self.next_player = self.white_player
+        
+        self.staring_plauer = self.current_player
 
     def place_piece(self, space_name):
         if self.game_state != Game.PLACE_PIECE:
@@ -314,3 +316,20 @@ class Game():
             self.game_state = Game.PLACE_PIECE
         else:
             self.game_state = Game.MOVE_PIECE
+    
+    def surrender(self):
+        self.winner = self.next_player
+        self.game_state = Game.GAME_OVER
+    
+    def reset_game(self):
+        self.board = Game.Board()
+        self.move_history = []
+        self.game_state = Game.PLACE_PIECE
+        self.winner = None
+
+        self.current_player = self.staring_plauer
+        
+        if self.current_player == self.white_player:
+            self.next_player = self.black_player
+        else:
+            self.next_player = self.white_player

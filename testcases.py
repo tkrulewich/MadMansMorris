@@ -59,6 +59,12 @@ class NewGameTests(unittest.TestCase):
         space = self.game.board.get_space("G1")
 
         self.assertEqual(space, BoardSpace.BLACK_SPACE)
+
+    # AC 26.1 Surrender
+    def test_surrender(self):
+        self.game.surrender()
+        self.assertTrue(Game.GAME_OVER)
+        self.assertEqual(self.game.winner, self.game.next_player)
     
 
     def test_space_has_correct_neighbors(self):
@@ -165,7 +171,7 @@ class NewGameTests(unittest.TestCase):
         self.game.move_piece("B4", "A4")
         self.game.remove_piece("B2")
 
-        # Now white has tjree pieces
+        # Now white has three pieces
 
         self.assertEqual(self.game.current_player.pieces_on_board, 3)
 
@@ -193,8 +199,8 @@ class NewGameTests(unittest.TestCase):
 
         self.assertEqual(self.game.board.get_space("B4"), BoardSpace.EMPTY_SPACE)
     
-    # AC 5.0 (Determine Game is Over)
-    def test_game_over(self):
+    # AC 5.0 Determine Game Over - Only 2 Pieces Remain
+    def test_game_over_only_2_pieces_remain(self):
         first_player = self.game.current_player   
         self.game.place_piece("A7")
 
@@ -247,7 +253,7 @@ class NewGameTests(unittest.TestCase):
 
         self.assertTrue(self.game.game_state == Game.GAME_OVER)
     
-    def test_game_over_correct_winner(self):
+    def test_game_over_declare_correct_winner(self):
         first_player = self.game.current_player   
         self.game.place_piece("A7")
 
@@ -392,7 +398,7 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
             self.assertEqual(self.game.board.get_space("E4"), BoardSpace.EMPTY_SPACE)
             self.assertEqual(self.game.board.get_space("E5"), self.game.black_player.piece_type)
     
-        # AC ? (Test Computer Player Valid Piece Movement)
+    # AC ? (Test Computer Player Valid Piece Movement)
     def test_computer_player_valid_piece_movement(self):
         computer_player = ComputerPlayer(self.game.current_player.piece_type, self.game)
         computer_player.pieces_in_deck = self.game.current_player.pieces_in_deck
