@@ -5,6 +5,10 @@ import threading
 import random
 import time
 
+# Player class takes the piece_type(white or black) and an instance of the game and
+# holds the variables for each player's pieces in the deck and their pieces on the board
+
+
 class Player():
     def __init__(self, piece_type, game):
         self.pieces_in_deck = 9
@@ -12,8 +16,13 @@ class Player():
         
         self.piece_type = piece_type
         self.game = game
+
     def take_turn(self):
         pass
+
+# ComputerPlayer is created as a subclass of Player as we will be
+# using all of the Player class variables when a computer player is called
+# AND we are extending the functionality, specifically the "take_turn()" method
 
 class ComputerPlayer(Player):
     def __init__(self, piece_type, game):
@@ -29,18 +38,26 @@ class ComputerPlayer(Player):
                 self.game.remove_piece(random.choice(spaces))
             elif self.game.game_state == Game.MOVE_PIECE:
                 self.game.move_piece(random.choice(spaces), random.choice(spaces))
-        
+
+
+# MoveRecord class is created to keep an array of information on each play that is made
+# in order to improve functionality of the computerplayer and can also be used to implement
+# an undo button along with other potential functionality 
             
 class MoveRecord():
-    def __init__(self, move_type, player : Player, start_space: str, end_space : str = ""):
+    def __init__(self, move_type, player : Player, from_space: str, to_space : str = ""):
         self.move_type = move_type
         self.player = player
-        self.start_space = start_space
-        self.end_space = end_space
+        self.from_space = from_space
+        self.to_space = to_space
     
     def __str__(self) -> str:
         player_name : str = "BLACK" if self.player.piece_type == BoardSpace.BLACK_SPACE else "WHITE"
-        return f"{player_name} {self.move_type} {self.start_space} {self.end_space}"
+        return f"{player_name} {self.move_type} {self.from_space} {self.to_space}"
+
+# Each instance of the BoardSpace class cotains the information of the state of each space in the 7x7 grid.
+# The variables and methods are used to indicate valid and invalid spaces as well as valid neighbors of 
+# valid spaces.  Instances of the boardspace class will be created and referenced in the Game class.
 
 class BoardSpace:
     INVALID_SPACE: int = -1
@@ -60,12 +77,14 @@ class BoardSpace:
     def add_neighbors(self, spaces):
         for space in spaces:
             self.add_neighbor(space)
-        
 
-
+#The main game logic is contained within the Game class
 
 class Game():
     class Board:
+        # Creating a 7x7 game board and identifying the invalid spaces within the grid. Once the BoardSpaces
+        # have been added to the spaces array, add_neighbors identifies each individual space's neighbors and
+        # the information is stored to limit the players to only valid moves 
         def __init__(self):
             self.COLUMN_ARRAY = ["A", "B", "C", "D", "E", "F", "G"]
             self.ROW_ARRAY = [1, 2, 3, 4, 5, 6, 7]
@@ -82,7 +101,8 @@ class Game():
 
                     if space_name not in invalid_spaces:
                         self.spaces[space_name] = BoardSpace(space_name)
-            
+
+                      
             self.spaces["A1"].add_neighbors([self.spaces["A4"], self.spaces["D1"]])
             self.spaces["A4"].add_neighbors([self.spaces["A1"], self.spaces["A7"], self.spaces["B4"]])
             self.spaces["A7"].add_neighbors([self.spaces["A4"], self.spaces["D7"]])
@@ -115,7 +135,9 @@ class Game():
             self.spaces["G4"].add_neighbors([self.spaces["G1"], self.spaces["G7"], self.spaces["F4"]])
             self.spaces["G1"].add_neighbors([self.spaces["G4"], self.spaces["D1"]])
             self.spaces["G7"].add_neighbors([self.spaces["G4"], self.spaces["D7"]])
-            
+
+        # set_space_value and get_space are used to modify and return the state of each BoardSpace
+        # (Invalid space, empty space, taken by white player or taken by black player) 
         def set_space_value(self, space, value):
             if space in self.spaces:
                 self.spaces[space].state = value
@@ -127,21 +149,18 @@ class Game():
             else:
                 return BoardSpace.INVALID_SPACE
     
-    GAME_OVER : int = -1
-    PLACE_PIECE: int = 0
-    MOVE_PIECE: int = 1
-    REMOVE_PIECE: int = 2
+    # 4 different game state variables 
+    GAME_OVER : int = -1            # The game has ended, one of the players has one or there was a draw
+    PLACE_PIECE: int = 0            # The player is able to move their piece to any valid space
+    MOVE_PIECE: int = 1             # The player is able to move their piece to only the BoardSpace's neighbors
+    REMOVE_PIECE: int = 2           # The player is able to remove an opponent's piece
 
     def __init__(self, white_player_human : bool = True, black_player_human : bool = True):
         self.unplayed_pieces = 9
         self.board = Game.Board()
 
-        self.starting_player : Player = None
-
         self.white_player = Player(BoardSpace.WHITE_SPACE, self) if white_player_human else ComputerPlayer(BoardSpace.WHITE_SPACE, self)
         self.black_player = Player(BoardSpace.BLACK_SPACE, self) if black_player_human else ComputerPlayer(BoardSpace.BLACK_SPACE, self)
-
-        self.winner : Player = None
 
         self.current_player : Player = None
         self.next_player : Player = None
@@ -162,8 +181,6 @@ class Game():
         else:
             self.current_player = self.black_player
             self.next_player = self.white_player
-        
-        self.staring_plauer = self.current_player
 
     def place_piece(self, space_name):
         if self.game_state != Game.PLACE_PIECE:
@@ -198,15 +215,7 @@ class Game():
             return
         
         if (self.check_for_mill(space_name)):
-            opponent_has_piece_not_in_mill = False
-
-            for space in self.board.spaces:
-                if self.board.spaces[space].state == self.next_player.piece_type and not self.check_for_mill(space):
-                    opponent_has_piece_not_in_mill = True
-                    break
-            
-            if opponent_has_piece_not_in_mill:
-                return
+            return
         
         # log piece removal
         self.move_history.append(MoveRecord("REMOVE", self.current_player, space_name))
@@ -308,7 +317,6 @@ class Game():
         self.next_player = temp
         
         if self.current_player.pieces_in_deck + self.current_player.pieces_on_board < 3:
-            self.winner = self.next_player
             self.game_state = Game.GAME_OVER
             return
         
@@ -316,20 +324,5 @@ class Game():
             self.game_state = Game.PLACE_PIECE
         else:
             self.game_state = Game.MOVE_PIECE
-    
-    def surrender(self):
-        self.winner = self.next_player
-        self.game_state = Game.GAME_OVER
-    
-    def reset_game(self):
-        self.board = Game.Board()
-        self.move_history = []
-        self.game_state = Game.PLACE_PIECE
-        self.winner = None
-
-        self.current_player = self.staring_plauer
         
-        if self.current_player == self.white_player:
-            self.next_player = self.black_player
-        else:
-            self.next_player = self.white_player
+        threading.Thread(target=self.current_player.take_turn).start()
