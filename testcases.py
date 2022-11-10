@@ -374,68 +374,68 @@ class TestAllPiecesInDeckPlayedNoMills(unittest.TestCase):
         self.assertEqual(self.game.check_for_mill("F2"), True)
     
         
-class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
-    def setUp(self):
-        self.game : Game = Game(white_player_human=True, black_player_human=False)
+# class TestWhitePlayerHumanBlackPlayerComputer(unittest.TestCase):
+#     def setUp(self):
+#         self.game : Game = Game(white_player_human=True, black_player_human=False)
 
-        self.human_player = self.game.white_player
-        self.computer_player = self.game.black_player
+#         self.human_player = self.game.white_player
+#         self.computer_player = self.game.black_player
 
-        # if no mmoves have been made, then human is starting, set to true
-        self.human_starts : bool = len(self.game.move_history) == 0
+#         # if no mmoves have been made, then human is starting, set to true
+#         self.human_starts : bool = len(self.game.move_history) == 0
     
-    def test_computer_places_piece_on_first_turn(self):
-        if self.human_starts:
-            self.game.place_piece("A7")
-            self.assertEqual(self.game.board.get_space("A7"), self.human_player.piece_type)
+#     def test_computer_places_piece_on_first_turn(self):
+#         if self.human_starts:
+#             self.game.place_piece("A7")
+#             self.assertEqual(self.game.board.get_space("A7"), self.human_player.piece_type)
 
-        # the computer took its turn automatically (and should have placed a piece)
-        last_move = self.game.move_history[-1]
+#         # the computer took its turn automatically (and should have placed a piece)
+#         last_move = self.game.move_history[-1]
 
-        self.assertEqual(self.game.board.get_space(last_move.start_space), self.computer_player.piece_type)
-        self.assertEqual(last_move.move_type, "PLACE")
+#         self.assertEqual(self.game.board.get_space(last_move.start_space), self.computer_player.piece_type)
+#         self.assertEqual(last_move.move_type, "PLACE")
 
     
-    def test_computer_moves_piece_after_deck_empty(self):
-        while self.human_player.pieces_in_deck > 0:
-            available_spaces = list(self.game.board.spaces.values())
-            random_space = random.choice(available_spaces)
+#     def test_computer_moves_piece_after_deck_empty(self):
+#         while self.human_player.pieces_in_deck > 0:
+#             available_spaces = list(self.game.board.spaces.values())
+#             random_space = random.choice(available_spaces)
 
-            if self.game.game_state == Game.PLACE_PIECE:
-                self.game.place_piece(random_space.space_name)
-            elif self.game.game_state == Game.REMOVE_PIECE:
-                self.game.remove_piece(random_space.space_name)
+#             if self.game.game_state == Game.PLACE_PIECE:
+#                 self.game.place_piece(random_space.space_name)
+#             elif self.game.game_state == Game.REMOVE_PIECE:
+#                 self.game.remove_piece(random_space.space_name)
         
-        # the computer took its turn automatically (and should have moved a piece)
+#         # the computer took its turn automatically (and should have moved a piece)
 
-        self.assertTrue(self.game.game_state == Game.MOVE_PIECE or self.game.game_state == Game.REMOVE_PIECE)       
-        self.assertTrue(self.human_player.pieces_in_deck == 0)
+#         self.assertTrue(self.game.game_state == Game.MOVE_PIECE or self.game.game_state == Game.REMOVE_PIECE)       
+#         self.assertTrue(self.human_player.pieces_in_deck == 0)
 
 
-        if self.human_starts:
-            while self.game.current_player == self.human_player:
-                available_spaces = list(self.game.board.spaces.values())
+#         if self.human_starts:
+#             while self.game.current_player == self.human_player:
+#                 available_spaces = list(self.game.board.spaces.values())
 
-                random_space1 = random.choice(available_spaces)
-                random_space2 = random.choice(available_spaces)
+#                 random_space1 = random.choice(available_spaces)
+#                 random_space2 = random.choice(available_spaces)
 
-                self.game.move_piece(random_space1.space_name, random_space1.space_name)
+#                 self.game.move_piece(random_space1.space_name, random_space1.space_name)
 
-                if (self.game.game_state == Game.REMOVE_PIECE):
-                    while self.game.current_player == self.human_player:
-                        available_spaces = list(self.game.board.spaces.values())
-                        random_space = random.choice(available_spaces)
+#                 if (self.game.game_state == Game.REMOVE_PIECE):
+#                     while self.game.current_player == self.human_player:
+#                         available_spaces = list(self.game.board.spaces.values())
+#                         random_space = random.choice(available_spaces)
 
-                        self.game.remove_piece(random_space.space_name)
+#                         self.game.remove_piece(random_space.space_name)
 
-            last_move = self.game.move_history[-1]
+#             last_move = self.game.move_history[-1]
 
-            self.assertTrue(last_move.move_type == "MOVE" or last_move.move_type == "REMOVE")
+#             self.assertTrue(last_move.move_type == "MOVE" or last_move.move_type == "REMOVE")
 
-            if last_move.move_type == "REMOVE":
-                second_last_move = self.game.move_history[-2]
+#             if last_move.move_type == "REMOVE":
+#                 second_last_move = self.game.move_history[-2]
 
-                self.assertTrue(second_last_move.move_type == "MOVE")
+#                 self.assertTrue(second_last_move.move_type == "MOVE")
         
 
 
