@@ -1,18 +1,24 @@
 from hashlib import blake2b
 from http.cookiejar import DefaultCookiePolicy
 from string import whitespace
-from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsView, QSizePolicy, QVBoxLayout, QHBoxLayout, QMenuBar
+
+# Our group decided to use PyQt6 as the GUI for this project
+
+from PyQt6.QtWidgets import QApplication, QWidget, QMainWindow, QGraphicsScene, QGraphicsSceneMouseEvent, QGraphicsView, QSizePolicy, QVBoxLayout, QHBoxLayout, QMenuBar
 from PyQt6.QtWidgets import QLabel, QMessageBox, QGraphicsBlurEffect, QGraphicsColorizeEffect, QDialog, QPushButton, QToolButton
 from PyQt6.QtGui import QBrush, QColor, QPen, QPainter, QPaintEvent, QMouseEvent, QFont, QPalette, QResizeEvent, QIcon, QAction
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtCore import QRect, Qt, pyqtSignal, QObject, QThread, QSize
+
 from threading import Thread
 import time
 
 from collections import deque
 
 import MadMansMorris
+
+# Reading the image files and assigning each to its own variable
 
 black_piece_render = QSvgRenderer("images/black_piece.svg")
 black_piece_mill_render = QSvgRenderer("images/black_piece_mill.svg")
@@ -21,6 +27,8 @@ white_piece_render = QSvgRenderer("images/white_piece.svg")
 white_piece_mill_render = QSvgRenderer("images/white_piece_mill.svg")
 
 empty_space_render = QSvgRenderer("images/empty_space.svg")
+
+# We found that rendering the board spaces individually as instances of a class improves game functionality
 
 class QBoardSpace(QGraphicsSvgItem):
     def __init__(self, board_space: MadMansMorris.BoardSpace, game: MadMansMorris.Game,board_renderer: 'GameWidget'):
@@ -31,6 +39,9 @@ class QBoardSpace(QGraphicsSvgItem):
         self.board_space : MadMansMorris = board_space
         self.game : MadMansMorris = game
         self.update()
+
+    # update method is called to generate the board after each move so that the space_state 
+    # of each BoardSpace object can be displayed for the user
 
     def update(self):
         if self.board_space.state == MadMansMorris.BoardSpace.BLACK_SPACE:
@@ -234,9 +245,9 @@ class BoardUpdater(QThread):
             time.sleep(0.1)
         
         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
-            if self.game.turn_thead != None:
+            if self.game.turn_thread != None:
                 # wait for thread to finish
-                self.game.turn_thead.join()
+                self.game.turn_thread.join()
             self.game_over_signal.emit()
 
 class GameWidget(QWidget):

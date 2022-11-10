@@ -155,6 +155,8 @@ class Game():
     MOVE_PIECE: int = 1             # The player is able to move their piece to only the BoardSpace's neighbors
     REMOVE_PIECE: int = 2           # The player is able to remove an opponent's piece
 
+    # Initializing the default game type as Human v. Human.  These variables can be changed on the main
+    # menu to Human v. Computer or Computer v. Computer 
     def __init__(self, white_player_human : bool = True, black_player_human : bool = True):
         self.unplayed_pieces = 9
         self.board = Game.Board()
@@ -173,7 +175,7 @@ class Game():
 
         self.current_player.take_turn()
 
-    
+    # A basic randomization function to select which player starts first
     def coin_toss(self) -> Player:
         if random.randint(0, 1) == 0:
             self.current_player = self.white_player
@@ -182,52 +184,11 @@ class Game():
             self.current_player = self.black_player
             self.next_player = self.white_player
 
-    def place_piece(self, space_name):
-        if self.game_state != Game.PLACE_PIECE:
-            return
-        
-        #make_mill = False
-        if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
-            return
+    # The check_for_mill method determines whether or not a selected piece is part of a formed mill,
+    # needed when presented with two circumstances:
+    # when the current player forms a mill with their move, enabling them to remove the opponent's piece
+    # when the opponent player's piece is part of a formed mill if the current player tries to remove it 
 
-        # log piece placement
-        self.move_history.append(MoveRecord("PLACE", self.current_player, space_name))
-        
-        if self.current_player.pieces_in_deck > 0:
-            self.current_player.pieces_in_deck -= 1
-            self.current_player.pieces_on_board += 1
-
-            self.board.set_space_value(space_name, self.current_player.piece_type)
-
-            if self.check_for_mill(space_name):
-                self.game_state = Game.REMOVE_PIECE
-            else:
-                self.change_player()
-    
-    
-    def remove_piece(self, space_name):
-        if self.game_state != Game.REMOVE_PIECE:
-            return
-        
-        state = self.board.get_space(space_name)
-        if (self.board.get_space(space_name) == self.current_player.piece_type or 
-            self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE):
-            return
-        
-        if (self.check_for_mill(space_name)):
-            return
-        
-        # log piece removal
-        self.move_history.append(MoveRecord("REMOVE", self.current_player, space_name))
-        
-        self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
-        self.current_player.formed_mill_this_turn = False
-
-        
-        self.next_player.pieces_on_board -= 1
-        self.change_player()
-
-    
     def check_for_mill(self, space_name):
         if self.board.get_space(space_name) == BoardSpace.EMPTY_SPACE:
             return False
@@ -277,6 +238,56 @@ class Game():
         
         return False
     
+    # place_piece sets up the logic for the beginning of the game when the pieces are not yet all on the board
+    # and for when either/both players end up with 3 pieces on the board 
+
+    def place_piece(self, space_name):
+        if self.game_state != Game.PLACE_PIECE:
+            return
+        
+        if self.board.get_space(space_name) != BoardSpace.EMPTY_SPACE:
+            return
+
+        # log piece placement
+        self.move_history.append(MoveRecord("PLACE", self.current_player, space_name))
+        
+        # For the beginning of the game when players are placing each of their 9 pieces on the board
+        if self.current_player.pieces_in_deck > 0:
+            self.current_player.pieces_in_deck -= 1
+            self.current_player.pieces_on_board += 1
+
+            self.board.set_space_value(space_name, self.current_player.piece_type)
+
+            if self.check_for_mill(space_name):
+                self.game_state = Game.REMOVE_PIECE
+            else:
+                self.change_player()
+
+    # Method remove_piece is called when player forms a mill
+    
+    def remove_piece(self, space_name):
+        if self.game_state != Game.REMOVE_PIECE:
+            return
+        
+        state = self.board.get_space(space_name)
+        if (self.board.get_space(space_name) != self.next_player.piece_type):
+            return
+        
+        if (self.check_for_mill(space_name)):
+            return
+        
+        # log piece removal
+        self.move_history.append(MoveRecord("REMOVE", self.current_player, space_name))
+        
+        self.board.set_space_value(space_name, BoardSpace.EMPTY_SPACE)
+        self.current_player.formed_mill_this_turn = False
+
+        self.next_player.pieces_on_board -= 1
+        self.change_player()
+
+    # The "main" part of the game largely utilizes the move_piece function, which limits the player's 
+    # movement to only the empty, neighboring and valid spaces.  
+
     def move_piece(self, start_space_name, end_space_name):
         if self.game_state != Game.MOVE_PIECE:
             return
@@ -284,13 +295,13 @@ class Game():
         if self.current_player.pieces_in_deck > 0:
             return
 
+        #variables relevant to move_history
         start_space = self.board.get_space(start_space_name)
         end_space = self.board.get_space(end_space_name)
 
         if start_space != self.current_player.piece_type:
             return
-        
-        
+                
         if end_space != BoardSpace.EMPTY_SPACE:
             return
 
@@ -308,8 +319,8 @@ class Game():
         else:
             self.change_player()
 
-
-
+    # change_player is called at the end of each move to swap current_player and next_player and to 
+    # return the current game_state 
     def change_player(self):
 
         temp = self.current_player
