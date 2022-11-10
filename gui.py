@@ -172,6 +172,8 @@ class MainApplication(QMainWindow):
         self.setWindowTitle("Mad Man's Morris")
 
         self.show_main_menu()
+
+        self.new_game_widget : GameWidget = None
     
     def show_main_menu(self):
         self.main_menu_widget = MainMenuWidget()
@@ -180,6 +182,9 @@ class MainApplication(QMainWindow):
         self.setCentralWidget(self.main_menu_widget)
     
     def start_game(self):
+        if self.new_game_widget is not None:
+            self.clean_up()
+        
         self.game = MadMansMorris.Game(self.main_menu_widget.white_player_human, self.main_menu_widget.black_player_human)
         self.game_widget = GameWidget(self.game)
         
@@ -283,6 +288,10 @@ class GameWidget(QWidget):
         self.thread.started.connect(self.board_monitor.run)
 
         self.thread.start()
+    
+    def clean_up(self):
+        self.thread.quit()
+        self.thread.wait()
 
     def draw_board(self):
         self.scene.addRect(0, 0, 600, 600, QPen(QColor(0, 0, 0)))
