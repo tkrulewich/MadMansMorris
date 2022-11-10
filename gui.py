@@ -173,7 +173,7 @@ class MainApplication(QMainWindow):
 
         self.show_main_menu()
 
-        self.new_game_widget : GameWidget = None
+        self.game_widget : GameWidget = None
     
     def show_main_menu(self):
         self.main_menu_widget = MainMenuWidget()
@@ -182,8 +182,8 @@ class MainApplication(QMainWindow):
         self.setCentralWidget(self.main_menu_widget)
     
     def start_game(self):
-        if self.new_game_widget is not None:
-            self.clean_up()
+        if self.game_widget is not None:
+            self.game_widget.clean_up()
         
         self.game = MadMansMorris.Game(self.main_menu_widget.white_player_human, self.main_menu_widget.black_player_human)
         self.game_widget = GameWidget(self.game)
@@ -192,8 +192,9 @@ class MainApplication(QMainWindow):
         self.setCentralWidget(self.game_widget)
 
     def game_over(self):
-        current = self.game.current_player
+        self.game_widget.clean_up()
 
+        current = self.game.current_player
         winner = "Black" if current == self.game.white_player else "White"
 
         self.game_over_widget = GameOverWidget(winner)
@@ -227,19 +228,18 @@ class BoardUpdater(QThread):
     def __init__(self, game: MadMansMorris.Game):
         super().__init__()
         self.game = game
+
+        self.active = True
     
     def run(self):
         number_moves = 0
-        while self.game.game_state != MadMansMorris.Game.GAME_OVER:
+        while self.active and self.game.game_state != MadMansMorris.Game.GAME_OVER:
             if number_moves != len(self.game.move_history):
                 self.update_board_signal.emit()
                 number_moves = len(self.game.move_history)
             time.sleep(0.1)
         
         if self.game.game_state == MadMansMorris.Game.GAME_OVER:
-            if self.game.turn_thead != None:
-                # wait for thread to finish
-                self.game.turn_thead.join()
             self.game_over_signal.emit()
 
 class GameWidget(QWidget):
@@ -290,6 +290,7 @@ class GameWidget(QWidget):
         self.thread.start()
     
     def clean_up(self):
+        self.board_monitor.active = False
         self.thread.quit()
         self.thread.wait()
 
