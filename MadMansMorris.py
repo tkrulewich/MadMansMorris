@@ -29,14 +29,57 @@ class ComputerPlayer(Player):
     def take_turn(self):
         time.sleep(0.5)
         spaces = list(self.game.board.spaces.keys())
+
         while self.game.current_player == self:
+            friendly_spaces = [space for space in self.game.board.spaces.values() if space.state == self.piece_type]
+            empty_spaces = [space for space in self.game.board.spaces.values() if space.state == BoardSpace.EMPTY_SPACE]
+            opponent_spaces = [space for space in self.game.board.spaces.values() if space.state != self.piece_type and space.state != BoardSpace.EMPTY_SPACE]
+
             # this is where the computer will take its turn
             if self.game.game_state == Game.PLACE_PIECE:
-                self.game.place_piece(random.choice(spaces))
+                choice = random.choice(empty_spaces)
+                for space in self.game.board.spaces.values():
+                    if space.state == BoardSpace.EMPTY_SPACE:
+                        space.state = self.piece_type
+
+                        if (self.game.check_for_mill(space.space_name)):
+                            choice = space
+                            space.state = BoardSpace.EMPTY_SPACE
+                            break
+                    
+                        space.state = BoardSpace.EMPTY_SPACE
+                self.game.place_piece(choice.space_name)
             elif self.game.game_state == Game.REMOVE_PIECE:
-                self.game.remove_piece(random.choice(spaces))
+                choice = random.choice(opponent_spaces)
+                self.game.remove_piece(choice.space_name)
             elif self.game.game_state == Game.MOVE_PIECE:
-                self.game.move_piece(random.choice(spaces), random.choice(spaces))
+                start_choice = random.choice(friendly_spaces)
+                end_choice = random.choice(empty_spaces)
+
+                for friendly_space in friendly_spaces:
+                    mill_found = False
+                    for target_space in empty_spaces:
+                        if target_space.space_name in friendly_space.neighbors or self.pieces_on_board == 3:
+                            
+                            self.game.board.spaces[friendly_space.space_name].state = BoardSpace.EMPTY_SPACE
+                            self.game.board.spaces[target_space.space_name].state = self.piece_type
+
+                            if self.game.check_for_mill(target_space.space_name):
+                                start_choice = friendly_space
+                                end_choice = target_space
+                                
+                                mill_found = True
+
+                                self.game.board.spaces[friendly_space.space_name].state = self.piece_type
+                                self.game.board.spaces[target_space.space_name].state = BoardSpace.EMPTY_SPACE
+                                break
+
+                            self.game.board.spaces[friendly_space.space_name].state = self.piece_type
+                            self.game.board.spaces[target_space.space_name].state = BoardSpace.EMPTY_SPACE
+                    if mill_found:
+                        break
+                        
+                self.game.move_piece(start_choice.space_name, end_choice.space_name)
         
             
 class MoveRecord():
@@ -45,6 +88,7 @@ class MoveRecord():
         self.player = player
         self.start_space = start_space
         self.end_space = end_space
+        self.game_state = player.game.game_state
     
     def __str__(self) -> str:
         player_name : str = "BLACK" if self.player.piece_type == BoardSpace.BLACK_SPACE else "WHITE"
@@ -158,6 +202,44 @@ class Game():
         self.game_state = Game.PLACE_PIECE
 
         self.current_player.take_turn()
+    
+    def undo(self):
+        if type(self.current_player) == ComputerPlayer:
+            return
+
+        if len(self.move_history) == 0:
+            return
+        
+
+        move = self.move_history.pop()
+        prev_move = self.move_history[-1] if len(self.move_history) > 0 else None
+
+        if type(move.player) == ComputerPlayer:
+            self.undo()
+
+        if move.move_type == "PLACE":
+            self.board.set_space_value(move.start_space, BoardSpace.EMPTY_SPACE)
+            move.player.pieces_in_deck += 1
+            move.player.pieces_on_board -= 1
+
+        elif move.move_type == "MOVE":
+            self.board.set_space_value(move.end_space, BoardSpace.EMPTY_SPACE)
+            self.board.set_space_value(move.start_space, move.player.piece_type)
+
+        elif move.move_type == "REMOVE":
+            opponent = self.white_player if move.player == self.black_player else self.black_player
+
+            self.board.set_space_value(move.start_space, opponent.piece_type)
+            opponent.pieces_on_board += 1
+
+        if self.game_state == Game.GAME_OVER:
+            self.game_state = Game.REMOVE_PIECE
+        
+        if self.game_state != Game.REMOVE_PIECE:
+            self.current_player, self.next_player = self.next_player, self.current_player
+        
+        self.game_state = move.game_state
+        
 
     
     def coin_toss(self) -> Player:

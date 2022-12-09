@@ -167,7 +167,7 @@ class MainApplication(QMainWindow):
 
         self._create_menu_bar()
 
-        self.setMinimumSize(600, 600)
+        self.setMinimumSize(400, 700)
 
         self.setWindowTitle("Mad Man's Morris")
 
@@ -257,10 +257,31 @@ class GameWidget(QWidget):
 
         self.layout().addWidget(self.player_turn_text)
 
+        # text box for pieces in deck
+
+        self.pieces_in_deck_text = QLabel("Pieces in Deck: " )
+        self.pieces_in_deck_text.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.layout().addWidget(self.pieces_in_deck_text)
+
+        # text box for pieces on board
+
+        self.pieces_on_board_text = QLabel("Pieces on Board: " )
+        self.pieces_on_board_text.setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+        self.layout().addWidget(self.pieces_on_board_text)
+
+
         self.last_move_text = QLabel("Last Move: " )
-        self.last_move_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.last_move_text.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         self.layout().addWidget(self.last_move_text)
+
+        # add undo button
+
+        self.undo_button = QPushButton("Undo")
+        self.undo_button.clicked.connect(self.undo_move)
+        self.layout().addWidget(self.undo_button)
 
         self.view = QGraphicsView()
         self.layout().addWidget(self.view)
@@ -293,6 +314,9 @@ class GameWidget(QWidget):
         self.board_monitor.active = False
         self.thread.quit()
         self.thread.wait()
+    
+    def undo_move(self):
+        self.game.undo()
 
     def draw_board(self):
         self.scene.addRect(0, 0, 600, 600, QPen(QColor(0, 0, 0)))
@@ -337,6 +361,9 @@ class GameWidget(QWidget):
         
         if len(self.game.move_history) > 0:
             self.last_move_text.setText("Last Move: " + str(self.game.move_history[-1]))
+        
+        self.pieces_in_deck_text.setText("Pieces in Deck: " + str(self.game.current_player.pieces_in_deck))
+        self.pieces_on_board_text.setText("Pieces on Board: " + str(self.game.current_player.pieces_on_board))
 
         self.scene.update()
         
